@@ -52,7 +52,7 @@ WaypointView::WaypointView(Waypoint* wp, QWidget* parent) :
     // add frames
     m_ui->comboBox_frame->addItem("Abs. Alt/Global",MAV_FRAME_GLOBAL);
     m_ui->comboBox_frame->addItem("Rel. Alt/Global", MAV_FRAME_GLOBAL_RELATIVE_ALT);
-    m_ui->comboBox_frame->addItem("Local/Abs. Alt.",MAV_FRAME_LOCAL);
+    m_ui->comboBox_frame->addItem("Local/Abs. Alt.",MAV_FRAME_LOCAL_NED);
     m_ui->comboBox_frame->addItem("Mission",MAV_FRAME_MISSION);
 
     // Initialize view correctly
@@ -322,7 +322,7 @@ void WaypointView::updateFrameView(int frame)
         m_ui->comboBox_frame->show();
         m_ui->customActionWidget->hide();
         break;
-    case MAV_FRAME_LOCAL:
+    case MAV_FRAME_LOCAL_NED:
         m_ui->lonSpinBox->hide();
         m_ui->latSpinBox->hide();
         m_ui->altSpinBox->hide();
@@ -386,7 +386,7 @@ void WaypointView::updateValues()
         updateFrameView(frame);
     }
     switch(frame) {
-    case MAV_FRAME_LOCAL: {
+    case MAV_FRAME_LOCAL_NED: {
         if (m_ui->posNSpinBox->value() != wp->getX()) {
             m_ui->posNSpinBox->setValue(wp->getX());
         }
@@ -504,7 +504,7 @@ void WaypointView::updateValues()
 
     if (customCommand->commandSpinBox->value() != wp->getAction()) {
         customCommand->commandSpinBox->setValue(wp->getAction());
-        qDebug() << "Changed action";
+        // qDebug() << "Changed action";
     }
     // Param 1
     if (customCommand->param1SpinBox->value() != wp->getParam1()) {
@@ -545,7 +545,7 @@ void WaypointView::updateValues()
     if (currId != lastId)
     {
 
-        qDebug() << "COLOR ID: " << currId;
+        // qDebug() << "COLOR ID: " << currId;
         if (currId == 1)
         {
             //backGroundColor = backGroundColor.lighter(150);
@@ -555,7 +555,7 @@ void WaypointView::updateValues()
         {
             backGroundColor = QColor("#252528").lighter(250);
         }
-        qDebug() << "COLOR:" << backGroundColor.name();
+        // qDebug() << "COLOR:" << backGroundColor.name();
 
         // Update color based on id
         QString groupBoxStyle = QString("QGroupBox {padding: 0px; margin: 0px; border: 0px; background-color: %1; }").arg(backGroundColor.name());

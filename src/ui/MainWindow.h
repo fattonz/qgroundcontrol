@@ -35,6 +35,7 @@ This file is part of the QGROUNDCONTROL project
 #include <QStatusBar>
 #include <QStackedWidget>
 #include <QSettings>
+#include <qlist.h>
 
 #include "ui_MainWindow.h"
 #include "LinkManager.h"
@@ -49,7 +50,6 @@ This file is part of the QGROUNDCONTROL project
 #include "UASListWidget.h"
 #include "MAVLinkProtocol.h"
 #include "MAVLinkSimulationLink.h"
-#include "AS4Protocol.h"
 #include "ObjectDetectionView.h"
 #include "HUD.h"
 #include "JoystickWidget.h"
@@ -67,7 +67,7 @@ This file is part of the QGROUNDCONTROL project
 #if (defined Q_OS_MAC) | (defined _MSC_VER)
 #include "QGCGoogleEarthView.h"
 #endif
-//#include "QMap3DWidget.h"
+#include "QGCToolBar.h"
 #include "SlugsDataSensorView.h"
 #include "LogCompressor.h"
 
@@ -75,6 +75,7 @@ This file is part of the QGROUNDCONTROL project
 
 #include "SlugsPadCameraControl.h"
 #include "UASControlParameters.h"
+#include "QGCFlightGearLink.h"
 
 class QGCMapTool;
 
@@ -181,6 +182,9 @@ public slots:
     /** @brief Add a custom tool widget */
     void createCustomWidget();
 
+    /** @brief Load a custom tool widget from a file */
+    void loadCustomWidget();
+
     void closeEvent(QCloseEvent* event);
 
     /** @brief Load data view, allowing to plot flight data */
@@ -211,6 +215,9 @@ public slots:
 
     /** @brief Updates a QDockWidget's location */
     void updateLocationSettings (Qt::DockWidgetArea location);
+
+public:
+	QList<QAction*> listLinkMenuActions(void);
 
 protected:
 
@@ -365,7 +372,6 @@ protected:
 
     // TODO Should be moved elsewhere, as the protocol does not belong to the UI
     MAVLinkProtocol* mavlink;
-    AS4Protocol* as4link;
 
     MAVLinkSimulationLink* simulationLink;
     LinkInterface* udpLink;
@@ -416,6 +422,8 @@ protected:
     QPointer<QDockWidget> slugsHilSimWidget;
     QPointer<QDockWidget> slugsCamControlWidget;
 
+    QPointer<QGCToolBar> toolBar;
+
 
     // Popup widgets
     JoystickWidget* joystickWidget;
@@ -440,6 +448,7 @@ protected:
     QGC_MAINWINDOW_STYLE currentStyle;
     Qt::WindowStates windowStateVal;
     bool lowPowerMode; ///< If enabled, QGC reduces the update rates of all widgets
+    QGCFlightGearLink* fgLink;
 
 private:
     Ui::MainWindow ui;

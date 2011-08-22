@@ -27,7 +27,16 @@
 #include "waypointitem.h"
 namespace mapcontrol
 {
-    WayPointItem::WayPointItem(const internals::PointLatLng &coord,double const& altitude, MapGraphicItem *map):coord(coord),reached(false),description(""),shownumber(true),isDragging(false),altitude(altitude),heading(0),map(map),autoreachedEnabled(true)
+    WayPointItem::WayPointItem(const internals::PointLatLng &coord,double const& altitude, MapGraphicItem *map) :
+        map(map),
+        coord(coord),
+        reached(false),
+        description(""),
+        shownumber(true),
+        isDragging(false),
+        altitude(altitude),
+        heading(0),
+        autoreachedEnabled(true)
     {
         text=0;
         numberI=0;
@@ -104,7 +113,7 @@ namespace mapcontrol
             delete textBG;
             coord=map->FromLocalToLatLng(this->pos().x(),this->pos().y());
             QString coord_str = " " + QString::number(coord.Lat(), 'f', 6) + "   " + QString::number(coord.Lng(), 'f', 6);
-            qDebug() << "WP MOVE:" << coord_str << __FILE__ << __LINE__;
+            // qDebug() << "WP MOVE:" << coord_str << __FILE__ << __LINE__;
             isDragging=false;
             RefreshToolTip();
 
@@ -120,7 +129,7 @@ namespace mapcontrol
             coord=map->FromLocalToLatLng(this->pos().x(),this->pos().y());
             QString coord_str = " " + QString::number(coord.Lat(), 'f', 6) + "   " + QString::number(coord.Lng(), 'f', 6);
             text->setText(coord_str);
-            qDebug() << "WP DRAG:" << coord_str << __FILE__ << __LINE__;
+            // qDebug() << "WP DRAG:" << coord_str << __FILE__ << __LINE__;
             textBG->setRect(text->boundingRect());
 
             emit WPValuesChanged(this);

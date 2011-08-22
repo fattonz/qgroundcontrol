@@ -51,20 +51,6 @@ This file is part of the QGROUNDCONTROL project
 #define GL_MULTISAMPLE  0x809D
 #endif
 
-template<typename T>
-inline bool isnan(T value)
-{
-    return value != value;
-
-}
-
-// requires #include <limits>
-template<typename T>
-inline bool isinf(T value)
-{
-    return std::numeric_limits<T>::has_infinity && (value == std::numeric_limits<T>::infinity() || (-1*value) == std::numeric_limits<T>::infinity());
-}
-
 /**
  * @warning The HUD widget will not start painting its content automatically
  *          to update the view, start the auto-update by calling HUD::start().
@@ -75,7 +61,6 @@ inline bool isinf(T value)
  */
 HUD::HUD(int width, int height, QWidget* parent)
     : QGLWidget(QGLFormat(QGL::SampleBuffers), parent),
-      u(NULL),
       uas(NULL),
       yawInt(0.0f),
       mode(tr("UNKNOWN MODE")),
@@ -213,7 +198,7 @@ void HUD::showEvent(QShowEvent* event)
 {
     // React only to internal (pre-display)
     // events
-    Q_UNUSED(event)
+    QGLWidget::showEvent(event);
     refreshTimer->start(updateInterval);
 }
 
@@ -221,7 +206,7 @@ void HUD::hideEvent(QHideEvent* event)
 {
     // React only to internal (pre-display)
     // events
-    Q_UNUSED(event);
+    QGLWidget::hideEvent(event);
     refreshTimer->stop();
 }
 
@@ -309,7 +294,6 @@ void HUD::setActiveUAS(UASInterface* uas)
 
         // Set new UAS
         this->uas = uas;
-        this->u = dynamic_cast<UAS*>(this->uas);
     }
 }
 
@@ -1631,5 +1615,9 @@ void HUD::setPixels(int imgid, const unsigned char* imageData, int length, int s
 void HUD::copyImage()
 {
     qDebug() << "HUD::copyImage()";
-    this->glImage = QGLWidget::convertToGLFormat(this->u->getImage());
+    UAS* u = dynamic_cast<UAS*>(this->uas);
+    if (u)
+    {
+        this->glImage = QGLWidget::convertToGLFormat(u->getImage());
+    }
 }

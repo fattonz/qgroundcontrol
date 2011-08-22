@@ -36,6 +36,7 @@ This file is part of the QGROUNDCONTROL project
 #include "MG.h"
 #include <MAVLinkProtocol.h>
 #include "QGCMAVLink.h"
+#include "QGCFlightGearLink.h"
 
 /**
  * @brief A generic MAVLINK-connected MAV/UAV
@@ -68,6 +69,10 @@ public:
 
     /** @brief The name of the robot */
     QString getUASName(void) const;
+    /** @brief Get short state */
+    const QString& getShortState() const;
+    /** @brief Get short mode */
+    const QString& getShortMode() const;
     /** @brief Get the unique system id */
     int getUASID() const;
     /** @brief Get the airframe */
@@ -198,6 +203,11 @@ protected: //COMMENTS FOR TEST UNIT
     int airframe;               ///< The airframe type
     bool attitudeKnown;         ///< True if attitude was received, false else
     QGCUASParamManager* paramManager; ///< Parameter manager class
+    QString shortStateText;     ///< Short textual state description
+    QString shortModeText;      ///< Short textual mode description
+    bool attitudeStamped;       ///< Should arriving data be timestamped with the last attitude? This helps with broken system time clocks on the MAV
+    quint64 lastAttitude;       ///< Timestamp of last attitude measurement
+    QGCFlightGearLink* simulation; ///< Hardware in the loop simulation link
 
 public:
     /** @brief Set the current battery type */
@@ -247,8 +257,6 @@ public slots:
     }
     /** @brief Set a new name **/
     void setUASName(const QString& name);
-    /** @brief Executes an action **/
-    void setAction(MAV_ACTION action);
     /** @brief Executes a command **/
     void executeCommand(MAV_CMD command);
     /** @brief Executes a command **/
@@ -268,6 +276,16 @@ public slots:
     void home();
     void halt();
     void go();
+
+    /** @brief Enable / disable HIL */
+    void enableHil(bool enable);
+
+    /** @brief Send the full HIL state to the MAV */
+
+    void sendHilState(	uint64_t time_us, float roll, float pitch, float yaw, float rollspeed,
+                        float pitchspeed, float yawspeed, int32_t lat, int32_t lon, int32_t alt,
+                        int16_t vx, int16_t vy, int16_t vz, int16_t xacc, int16_t yacc, int16_t zacc);
+
     /** @brief Places the UAV in Hardware-in-the-Loop simulation status **/
     void startHil();
 
@@ -374,7 +392,6 @@ public slots:
     void startPressureCalibration();
 
     void startDataRecording();
-    void pauseDataRecording();
     void stopDataRecording();
 
 signals:
@@ -393,10 +410,14 @@ signals:
     void imageStarted(quint64 timestamp);
     /** @brief A new camera image has arrived */
     void imageReady(UASInterface* uas);
+    /** @brief HIL controls have changed */
+    void hilControlsChanged(uint64_t time, float rollAilerons, float pitchElevator, float yawRudder, float throttle, uint8_t systemMode, uint8_t navMode);
 
 protected:
     /** @brief Get the UNIX timestamp in milliseconds */
     quint64 getUnixTime(quint64 time=0);
+    /** @brief Get the UNIX timestamp in milliseconds, ignore attitudeStamped mode */
+    quint64 getUnixReferenceTime(quint64 time);
 
 protected slots:
     /** @brief Write settings to disk */

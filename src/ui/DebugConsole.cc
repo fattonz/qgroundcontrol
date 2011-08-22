@@ -180,12 +180,12 @@ void DebugConsole::addLink(LinkInterface* link)
 
     // Register for name changes
     connect(link, SIGNAL(nameChanged(QString)), this, SLOT(updateLinkName(QString)));
-    connect(link, SIGNAL(destroyed(QObject*)), this, SLOT(removeLink(QObject*)));
+    connect(link, SIGNAL(deleteLink(LinkInterface* const)), this, SLOT(removeLink(LinkInterface* const)));
 }
 
-void DebugConsole::removeLink(QObject* link)
+void DebugConsole::removeLink(LinkInterface* const linkInterface)
 {
-    LinkInterface* linkInterface = dynamic_cast<LinkInterface*>(link);
+    //LinkInterface* linkInterface = dynamic_cast<LinkInterface*>(link);
     // Add link to link list
     if (links.contains(linkInterface)) {
         int linkIndex = links.indexOf(linkInterface);
@@ -194,7 +194,7 @@ void DebugConsole::removeLink(QObject* link)
 
         m_ui->linkComboBox->removeItem(linkIndex);
     }
-    if (link == currLink) currLink = NULL;
+    if (linkInterface == currLink) currLink = NULL;
 }
 
 void DebugConsole::linkSelected(int linkId)
@@ -355,7 +355,7 @@ void DebugConsole::receiveBytes(LinkInterface* link, QByteArray bytes)
         for (int j = 0; j < len; j++)
         {
             unsigned char byte = bytes.at(j);
-            // Filter MAVLink (http://pixhawk.ethz.ch/wiki/mavlink/) messages out of the stream.
+            // Filter MAVLink (http://qgroundcontrol.org/mavlink/) messages out of the stream.
             if (filterMAVLINK)
             {
                 if (this->bytesToIgnore > 0)
@@ -394,7 +394,6 @@ void DebugConsole::receiveBytes(LinkInterface* link, QByteArray bytes)
                             case (unsigned char)'\n':   // Accept line feed
                                 if (lastByte != '\r')   // Do not break line again for CR+LF
                                     str.append(byte);   // only break line for single LF or CR bytes
-                                else ;
                             break;
                             case (unsigned char)' ':    // space of any type means don't add another on hex output
                             case (unsigned char)'\t':   // Accept tab

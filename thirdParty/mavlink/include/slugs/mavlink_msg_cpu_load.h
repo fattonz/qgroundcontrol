@@ -1,16 +1,18 @@
 // MESSAGE CPU_LOAD PACKING
 
 #define MAVLINK_MSG_ID_CPU_LOAD 170
+#define MAVLINK_MSG_ID_CPU_LOAD_LEN 4
+#define MAVLINK_MSG_170_LEN 4
+#define MAVLINK_MSG_ID_CPU_LOAD_KEY 0xCA
+#define MAVLINK_MSG_170_KEY 0xCA
 
 typedef struct __mavlink_cpu_load_t 
 {
-	uint8_t sensLoad; ///< Sensor DSC Load
-	uint8_t ctrlLoad; ///< Control DSC Load
-	uint16_t batVolt; ///< Battery Voltage in millivolts
+	uint16_t batVolt;	///< Battery Voltage in millivolts
+	uint8_t sensLoad;	///< Sensor DSC Load
+	uint8_t ctrlLoad;	///< Control DSC Load
 
 } mavlink_cpu_load_t;
-
-
 
 /**
  * @brief Pack a cpu_load message
@@ -25,14 +27,14 @@ typedef struct __mavlink_cpu_load_t
  */
 static inline uint16_t mavlink_msg_cpu_load_pack(uint8_t system_id, uint8_t component_id, mavlink_message_t* msg, uint8_t sensLoad, uint8_t ctrlLoad, uint16_t batVolt)
 {
-	uint16_t i = 0;
+	mavlink_cpu_load_t *p = (mavlink_cpu_load_t *)&msg->payload[0];
 	msg->msgid = MAVLINK_MSG_ID_CPU_LOAD;
 
-	i += put_uint8_t_by_index(sensLoad, i, msg->payload); // Sensor DSC Load
-	i += put_uint8_t_by_index(ctrlLoad, i, msg->payload); // Control DSC Load
-	i += put_uint16_t_by_index(batVolt, i, msg->payload); // Battery Voltage in millivolts
+	p->sensLoad = sensLoad;	// uint8_t:Sensor DSC Load
+	p->ctrlLoad = ctrlLoad;	// uint8_t:Control DSC Load
+	p->batVolt = batVolt;	// uint16_t:Battery Voltage in millivolts
 
-	return mavlink_finalize_message(msg, system_id, component_id, i);
+	return mavlink_finalize_message(msg, system_id, component_id, MAVLINK_MSG_ID_CPU_LOAD_LEN);
 }
 
 /**
@@ -48,14 +50,14 @@ static inline uint16_t mavlink_msg_cpu_load_pack(uint8_t system_id, uint8_t comp
  */
 static inline uint16_t mavlink_msg_cpu_load_pack_chan(uint8_t system_id, uint8_t component_id, uint8_t chan, mavlink_message_t* msg, uint8_t sensLoad, uint8_t ctrlLoad, uint16_t batVolt)
 {
-	uint16_t i = 0;
+	mavlink_cpu_load_t *p = (mavlink_cpu_load_t *)&msg->payload[0];
 	msg->msgid = MAVLINK_MSG_ID_CPU_LOAD;
 
-	i += put_uint8_t_by_index(sensLoad, i, msg->payload); // Sensor DSC Load
-	i += put_uint8_t_by_index(ctrlLoad, i, msg->payload); // Control DSC Load
-	i += put_uint16_t_by_index(batVolt, i, msg->payload); // Battery Voltage in millivolts
+	p->sensLoad = sensLoad;	// uint8_t:Sensor DSC Load
+	p->ctrlLoad = ctrlLoad;	// uint8_t:Control DSC Load
+	p->batVolt = batVolt;	// uint16_t:Battery Voltage in millivolts
 
-	return mavlink_finalize_message_chan(msg, system_id, component_id, chan, i);
+	return mavlink_finalize_message_chan(msg, system_id, component_id, chan, MAVLINK_MSG_ID_CPU_LOAD_LEN);
 }
 
 /**
@@ -71,6 +73,8 @@ static inline uint16_t mavlink_msg_cpu_load_encode(uint8_t system_id, uint8_t co
 	return mavlink_msg_cpu_load_pack(system_id, component_id, msg, cpu_load->sensLoad, cpu_load->ctrlLoad, cpu_load->batVolt);
 }
 
+
+#ifdef MAVLINK_USE_CONVENIENCE_FUNCTIONS
 /**
  * @brief Send a cpu_load message
  * @param chan MAVLink channel to send the message
@@ -79,13 +83,31 @@ static inline uint16_t mavlink_msg_cpu_load_encode(uint8_t system_id, uint8_t co
  * @param ctrlLoad Control DSC Load
  * @param batVolt Battery Voltage in millivolts
  */
-#ifdef MAVLINK_USE_CONVENIENCE_FUNCTIONS
-
 static inline void mavlink_msg_cpu_load_send(mavlink_channel_t chan, uint8_t sensLoad, uint8_t ctrlLoad, uint16_t batVolt)
 {
-	mavlink_message_t msg;
-	mavlink_msg_cpu_load_pack_chan(mavlink_system.sysid, mavlink_system.compid, chan, &msg, sensLoad, ctrlLoad, batVolt);
-	mavlink_send_uart(chan, &msg);
+	mavlink_header_t hdr;
+	mavlink_cpu_load_t payload;
+
+	MAVLINK_BUFFER_CHECK_START( chan, MAVLINK_MSG_ID_CPU_LOAD_LEN )
+	payload.sensLoad = sensLoad;	// uint8_t:Sensor DSC Load
+	payload.ctrlLoad = ctrlLoad;	// uint8_t:Control DSC Load
+	payload.batVolt = batVolt;	// uint16_t:Battery Voltage in millivolts
+
+	hdr.STX = MAVLINK_STX;
+	hdr.len = MAVLINK_MSG_ID_CPU_LOAD_LEN;
+	hdr.msgid = MAVLINK_MSG_ID_CPU_LOAD;
+	hdr.sysid = mavlink_system.sysid;
+	hdr.compid = mavlink_system.compid;
+	hdr.seq = mavlink_get_channel_status(chan)->current_tx_seq;
+	mavlink_get_channel_status(chan)->current_tx_seq = hdr.seq + 1;
+	mavlink_send_mem(chan, (uint8_t *)&hdr.STX, MAVLINK_NUM_HEADER_BYTES );
+
+	crc_init(&hdr.ck);
+	crc_calculate_mem((uint8_t *)&hdr.len, &hdr.ck, MAVLINK_CORE_HEADER_LEN);
+	crc_calculate_mem((uint8_t *)&payload, &hdr.ck, hdr.len );
+	crc_accumulate( 0xCA, &hdr.ck); /// include key in X25 checksum
+	mavlink_send_mem(chan, (uint8_t *)&hdr.ck, MAVLINK_NUM_CHECKSUM_BYTES);
+	MAVLINK_BUFFER_CHECK_END
 }
 
 #endif
@@ -98,7 +120,8 @@ static inline void mavlink_msg_cpu_load_send(mavlink_channel_t chan, uint8_t sen
  */
 static inline uint8_t mavlink_msg_cpu_load_get_sensLoad(const mavlink_message_t* msg)
 {
-	return (uint8_t)(msg->payload)[0];
+	mavlink_cpu_load_t *p = (mavlink_cpu_load_t *)&msg->payload[0];
+	return (uint8_t)(p->sensLoad);
 }
 
 /**
@@ -108,7 +131,8 @@ static inline uint8_t mavlink_msg_cpu_load_get_sensLoad(const mavlink_message_t*
  */
 static inline uint8_t mavlink_msg_cpu_load_get_ctrlLoad(const mavlink_message_t* msg)
 {
-	return (uint8_t)(msg->payload+sizeof(uint8_t))[0];
+	mavlink_cpu_load_t *p = (mavlink_cpu_load_t *)&msg->payload[0];
+	return (uint8_t)(p->ctrlLoad);
 }
 
 /**
@@ -118,10 +142,8 @@ static inline uint8_t mavlink_msg_cpu_load_get_ctrlLoad(const mavlink_message_t*
  */
 static inline uint16_t mavlink_msg_cpu_load_get_batVolt(const mavlink_message_t* msg)
 {
-	generic_16bit r;
-	r.b[1] = (msg->payload+sizeof(uint8_t)+sizeof(uint8_t))[0];
-	r.b[0] = (msg->payload+sizeof(uint8_t)+sizeof(uint8_t))[1];
-	return (uint16_t)r.s;
+	mavlink_cpu_load_t *p = (mavlink_cpu_load_t *)&msg->payload[0];
+	return (uint16_t)(p->batVolt);
 }
 
 /**
@@ -132,7 +154,5 @@ static inline uint16_t mavlink_msg_cpu_load_get_batVolt(const mavlink_message_t*
  */
 static inline void mavlink_msg_cpu_load_decode(const mavlink_message_t* msg, mavlink_cpu_load_t* cpu_load)
 {
-	cpu_load->sensLoad = mavlink_msg_cpu_load_get_sensLoad(msg);
-	cpu_load->ctrlLoad = mavlink_msg_cpu_load_get_ctrlLoad(msg);
-	cpu_load->batVolt = mavlink_msg_cpu_load_get_batVolt(msg);
+	memcpy( cpu_load, msg->payload, sizeof(mavlink_cpu_load_t));
 }

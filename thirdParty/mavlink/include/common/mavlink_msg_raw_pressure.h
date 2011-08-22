@@ -1,18 +1,20 @@
 // MESSAGE RAW_PRESSURE PACKING
 
 #define MAVLINK_MSG_ID_RAW_PRESSURE 29
+#define MAVLINK_MSG_ID_RAW_PRESSURE_LEN 16
+#define MAVLINK_MSG_29_LEN 16
+#define MAVLINK_MSG_ID_RAW_PRESSURE_KEY 0x15
+#define MAVLINK_MSG_29_KEY 0x15
 
 typedef struct __mavlink_raw_pressure_t 
 {
-	uint64_t usec; ///< Timestamp (microseconds since UNIX epoch or microseconds since system boot)
-	int16_t press_abs; ///< Absolute pressure (raw)
-	int16_t press_diff1; ///< Differential pressure 1 (raw)
-	int16_t press_diff2; ///< Differential pressure 2 (raw)
-	int16_t temperature; ///< Raw Temperature measurement (raw)
+	uint64_t usec;	///< Timestamp (microseconds since UNIX epoch or microseconds since system boot)
+	int16_t press_abs;	///< Absolute pressure (raw)
+	int16_t press_diff1;	///< Differential pressure 1 (raw)
+	int16_t press_diff2;	///< Differential pressure 2 (raw)
+	int16_t temperature;	///< Raw Temperature measurement (raw)
 
 } mavlink_raw_pressure_t;
-
-
 
 /**
  * @brief Pack a raw_pressure message
@@ -29,16 +31,16 @@ typedef struct __mavlink_raw_pressure_t
  */
 static inline uint16_t mavlink_msg_raw_pressure_pack(uint8_t system_id, uint8_t component_id, mavlink_message_t* msg, uint64_t usec, int16_t press_abs, int16_t press_diff1, int16_t press_diff2, int16_t temperature)
 {
-	uint16_t i = 0;
+	mavlink_raw_pressure_t *p = (mavlink_raw_pressure_t *)&msg->payload[0];
 	msg->msgid = MAVLINK_MSG_ID_RAW_PRESSURE;
 
-	i += put_uint64_t_by_index(usec, i, msg->payload); // Timestamp (microseconds since UNIX epoch or microseconds since system boot)
-	i += put_int16_t_by_index(press_abs, i, msg->payload); // Absolute pressure (raw)
-	i += put_int16_t_by_index(press_diff1, i, msg->payload); // Differential pressure 1 (raw)
-	i += put_int16_t_by_index(press_diff2, i, msg->payload); // Differential pressure 2 (raw)
-	i += put_int16_t_by_index(temperature, i, msg->payload); // Raw Temperature measurement (raw)
+	p->usec = usec;	// uint64_t:Timestamp (microseconds since UNIX epoch or microseconds since system boot)
+	p->press_abs = press_abs;	// int16_t:Absolute pressure (raw)
+	p->press_diff1 = press_diff1;	// int16_t:Differential pressure 1 (raw)
+	p->press_diff2 = press_diff2;	// int16_t:Differential pressure 2 (raw)
+	p->temperature = temperature;	// int16_t:Raw Temperature measurement (raw)
 
-	return mavlink_finalize_message(msg, system_id, component_id, i);
+	return mavlink_finalize_message(msg, system_id, component_id, MAVLINK_MSG_ID_RAW_PRESSURE_LEN);
 }
 
 /**
@@ -56,16 +58,16 @@ static inline uint16_t mavlink_msg_raw_pressure_pack(uint8_t system_id, uint8_t 
  */
 static inline uint16_t mavlink_msg_raw_pressure_pack_chan(uint8_t system_id, uint8_t component_id, uint8_t chan, mavlink_message_t* msg, uint64_t usec, int16_t press_abs, int16_t press_diff1, int16_t press_diff2, int16_t temperature)
 {
-	uint16_t i = 0;
+	mavlink_raw_pressure_t *p = (mavlink_raw_pressure_t *)&msg->payload[0];
 	msg->msgid = MAVLINK_MSG_ID_RAW_PRESSURE;
 
-	i += put_uint64_t_by_index(usec, i, msg->payload); // Timestamp (microseconds since UNIX epoch or microseconds since system boot)
-	i += put_int16_t_by_index(press_abs, i, msg->payload); // Absolute pressure (raw)
-	i += put_int16_t_by_index(press_diff1, i, msg->payload); // Differential pressure 1 (raw)
-	i += put_int16_t_by_index(press_diff2, i, msg->payload); // Differential pressure 2 (raw)
-	i += put_int16_t_by_index(temperature, i, msg->payload); // Raw Temperature measurement (raw)
+	p->usec = usec;	// uint64_t:Timestamp (microseconds since UNIX epoch or microseconds since system boot)
+	p->press_abs = press_abs;	// int16_t:Absolute pressure (raw)
+	p->press_diff1 = press_diff1;	// int16_t:Differential pressure 1 (raw)
+	p->press_diff2 = press_diff2;	// int16_t:Differential pressure 2 (raw)
+	p->temperature = temperature;	// int16_t:Raw Temperature measurement (raw)
 
-	return mavlink_finalize_message_chan(msg, system_id, component_id, chan, i);
+	return mavlink_finalize_message_chan(msg, system_id, component_id, chan, MAVLINK_MSG_ID_RAW_PRESSURE_LEN);
 }
 
 /**
@@ -81,6 +83,8 @@ static inline uint16_t mavlink_msg_raw_pressure_encode(uint8_t system_id, uint8_
 	return mavlink_msg_raw_pressure_pack(system_id, component_id, msg, raw_pressure->usec, raw_pressure->press_abs, raw_pressure->press_diff1, raw_pressure->press_diff2, raw_pressure->temperature);
 }
 
+
+#ifdef MAVLINK_USE_CONVENIENCE_FUNCTIONS
 /**
  * @brief Send a raw_pressure message
  * @param chan MAVLink channel to send the message
@@ -91,13 +95,33 @@ static inline uint16_t mavlink_msg_raw_pressure_encode(uint8_t system_id, uint8_
  * @param press_diff2 Differential pressure 2 (raw)
  * @param temperature Raw Temperature measurement (raw)
  */
-#ifdef MAVLINK_USE_CONVENIENCE_FUNCTIONS
-
 static inline void mavlink_msg_raw_pressure_send(mavlink_channel_t chan, uint64_t usec, int16_t press_abs, int16_t press_diff1, int16_t press_diff2, int16_t temperature)
 {
-	mavlink_message_t msg;
-	mavlink_msg_raw_pressure_pack_chan(mavlink_system.sysid, mavlink_system.compid, chan, &msg, usec, press_abs, press_diff1, press_diff2, temperature);
-	mavlink_send_uart(chan, &msg);
+	mavlink_header_t hdr;
+	mavlink_raw_pressure_t payload;
+
+	MAVLINK_BUFFER_CHECK_START( chan, MAVLINK_MSG_ID_RAW_PRESSURE_LEN )
+	payload.usec = usec;	// uint64_t:Timestamp (microseconds since UNIX epoch or microseconds since system boot)
+	payload.press_abs = press_abs;	// int16_t:Absolute pressure (raw)
+	payload.press_diff1 = press_diff1;	// int16_t:Differential pressure 1 (raw)
+	payload.press_diff2 = press_diff2;	// int16_t:Differential pressure 2 (raw)
+	payload.temperature = temperature;	// int16_t:Raw Temperature measurement (raw)
+
+	hdr.STX = MAVLINK_STX;
+	hdr.len = MAVLINK_MSG_ID_RAW_PRESSURE_LEN;
+	hdr.msgid = MAVLINK_MSG_ID_RAW_PRESSURE;
+	hdr.sysid = mavlink_system.sysid;
+	hdr.compid = mavlink_system.compid;
+	hdr.seq = mavlink_get_channel_status(chan)->current_tx_seq;
+	mavlink_get_channel_status(chan)->current_tx_seq = hdr.seq + 1;
+	mavlink_send_mem(chan, (uint8_t *)&hdr.STX, MAVLINK_NUM_HEADER_BYTES );
+
+	crc_init(&hdr.ck);
+	crc_calculate_mem((uint8_t *)&hdr.len, &hdr.ck, MAVLINK_CORE_HEADER_LEN);
+	crc_calculate_mem((uint8_t *)&payload, &hdr.ck, hdr.len );
+	crc_accumulate( 0x15, &hdr.ck); /// include key in X25 checksum
+	mavlink_send_mem(chan, (uint8_t *)&hdr.ck, MAVLINK_NUM_CHECKSUM_BYTES);
+	MAVLINK_BUFFER_CHECK_END
 }
 
 #endif
@@ -110,16 +134,8 @@ static inline void mavlink_msg_raw_pressure_send(mavlink_channel_t chan, uint64_
  */
 static inline uint64_t mavlink_msg_raw_pressure_get_usec(const mavlink_message_t* msg)
 {
-	generic_64bit r;
-	r.b[7] = (msg->payload)[0];
-	r.b[6] = (msg->payload)[1];
-	r.b[5] = (msg->payload)[2];
-	r.b[4] = (msg->payload)[3];
-	r.b[3] = (msg->payload)[4];
-	r.b[2] = (msg->payload)[5];
-	r.b[1] = (msg->payload)[6];
-	r.b[0] = (msg->payload)[7];
-	return (uint64_t)r.ll;
+	mavlink_raw_pressure_t *p = (mavlink_raw_pressure_t *)&msg->payload[0];
+	return (uint64_t)(p->usec);
 }
 
 /**
@@ -129,10 +145,8 @@ static inline uint64_t mavlink_msg_raw_pressure_get_usec(const mavlink_message_t
  */
 static inline int16_t mavlink_msg_raw_pressure_get_press_abs(const mavlink_message_t* msg)
 {
-	generic_16bit r;
-	r.b[1] = (msg->payload+sizeof(uint64_t))[0];
-	r.b[0] = (msg->payload+sizeof(uint64_t))[1];
-	return (int16_t)r.s;
+	mavlink_raw_pressure_t *p = (mavlink_raw_pressure_t *)&msg->payload[0];
+	return (int16_t)(p->press_abs);
 }
 
 /**
@@ -142,10 +156,8 @@ static inline int16_t mavlink_msg_raw_pressure_get_press_abs(const mavlink_messa
  */
 static inline int16_t mavlink_msg_raw_pressure_get_press_diff1(const mavlink_message_t* msg)
 {
-	generic_16bit r;
-	r.b[1] = (msg->payload+sizeof(uint64_t)+sizeof(int16_t))[0];
-	r.b[0] = (msg->payload+sizeof(uint64_t)+sizeof(int16_t))[1];
-	return (int16_t)r.s;
+	mavlink_raw_pressure_t *p = (mavlink_raw_pressure_t *)&msg->payload[0];
+	return (int16_t)(p->press_diff1);
 }
 
 /**
@@ -155,10 +167,8 @@ static inline int16_t mavlink_msg_raw_pressure_get_press_diff1(const mavlink_mes
  */
 static inline int16_t mavlink_msg_raw_pressure_get_press_diff2(const mavlink_message_t* msg)
 {
-	generic_16bit r;
-	r.b[1] = (msg->payload+sizeof(uint64_t)+sizeof(int16_t)+sizeof(int16_t))[0];
-	r.b[0] = (msg->payload+sizeof(uint64_t)+sizeof(int16_t)+sizeof(int16_t))[1];
-	return (int16_t)r.s;
+	mavlink_raw_pressure_t *p = (mavlink_raw_pressure_t *)&msg->payload[0];
+	return (int16_t)(p->press_diff2);
 }
 
 /**
@@ -168,10 +178,8 @@ static inline int16_t mavlink_msg_raw_pressure_get_press_diff2(const mavlink_mes
  */
 static inline int16_t mavlink_msg_raw_pressure_get_temperature(const mavlink_message_t* msg)
 {
-	generic_16bit r;
-	r.b[1] = (msg->payload+sizeof(uint64_t)+sizeof(int16_t)+sizeof(int16_t)+sizeof(int16_t))[0];
-	r.b[0] = (msg->payload+sizeof(uint64_t)+sizeof(int16_t)+sizeof(int16_t)+sizeof(int16_t))[1];
-	return (int16_t)r.s;
+	mavlink_raw_pressure_t *p = (mavlink_raw_pressure_t *)&msg->payload[0];
+	return (int16_t)(p->temperature);
 }
 
 /**
@@ -182,9 +190,5 @@ static inline int16_t mavlink_msg_raw_pressure_get_temperature(const mavlink_mes
  */
 static inline void mavlink_msg_raw_pressure_decode(const mavlink_message_t* msg, mavlink_raw_pressure_t* raw_pressure)
 {
-	raw_pressure->usec = mavlink_msg_raw_pressure_get_usec(msg);
-	raw_pressure->press_abs = mavlink_msg_raw_pressure_get_press_abs(msg);
-	raw_pressure->press_diff1 = mavlink_msg_raw_pressure_get_press_diff1(msg);
-	raw_pressure->press_diff2 = mavlink_msg_raw_pressure_get_press_diff2(msg);
-	raw_pressure->temperature = mavlink_msg_raw_pressure_get_temperature(msg);
+	memcpy( raw_pressure, msg->payload, sizeof(mavlink_raw_pressure_t));
 }

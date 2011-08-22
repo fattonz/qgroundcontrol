@@ -68,6 +68,7 @@ UASView::UASView(UASInterface* uas, QWidget *parent) :
         removeAction(new QAction("Delete this system", this)),
         renameAction(new QAction("Rename..", this)),
         selectAction(new QAction("Control this system", this )),
+        hilAction(new QAction("Enable Hardware-in-the-Loop Simulation", this )),
         selectAirframeAction(new QAction("Choose Airframe", this)),
         setBatterySpecsAction(new QAction("Set Battery Options", this)),
         lowPowerModeEnabled(false),
@@ -76,6 +77,7 @@ UASView::UASView(UASInterface* uas, QWidget *parent) :
     // FIXME XXX
     lowPowerModeEnabled = MainWindow::instance()->lowPowerModeEnabled();
 
+    hilAction->setCheckable(true);
 
     m_ui->setupUi(this);
 
@@ -114,6 +116,7 @@ UASView::UASView(UASInterface* uas, QWidget *parent) :
     connect(removeAction, SIGNAL(triggered()), this, SLOT(deleteLater()));
     connect(renameAction, SIGNAL(triggered()), this, SLOT(rename()));
     connect(selectAction, SIGNAL(triggered()), uas, SLOT(setSelected()));
+    connect(hilAction, SIGNAL(triggered(bool)), uas, SLOT(enableHil(bool)));
     connect(selectAirframeAction, SIGNAL(triggered()), this, SLOT(selectAirframe()));
     connect(setBatterySpecsAction, SIGNAL(triggered()), this, SLOT(setBatterySpecs()));
     connect(uas, SIGNAL(systemRemoved()), this, SLOT(deleteLater()));
@@ -146,6 +149,9 @@ UASView::UASView(UASInterface* uas, QWidget *parent) :
     m_ui->killButton->hide();
     m_ui->shutdownButton->hide();
 
+    // Set state and mode
+    updateMode(uas->getUASID(), uas->getShortMode(), "");
+    updateState(uas, uas->getShortState(), "");
     setSystemType(uas, uas->getSystemType());
 }
 
@@ -228,7 +234,7 @@ void UASView::mouseDoubleClickEvent (QMouseEvent * event)
 {
     Q_UNUSED(event);
     UASManager::instance()->setActiveUAS(uas);
-    qDebug() << __FILE__ << __LINE__ << "DOUBLECLICKED";
+    // qDebug() << __FILE__ << __LINE__ << "DOUBLECLICKED";
 }
 
 void UASView::enterEvent(QEvent* event)
@@ -239,10 +245,10 @@ void UASView::enterEvent(QEvent* event)
             grabMouse(QCursor(Qt::PointingHandCursor));
         }
     }
-    qDebug() << __FILE__ << __LINE__ << "IN FOCUS";
+    // qDebug() << __FILE__ << __LINE__ << "IN FOCUS";
 
     if (event->type() == QEvent::MouseButtonDblClick) {
-        qDebug() << __FILE__ << __LINE__ << "UAS CLICKED!";
+        // qDebug() << __FILE__ << __LINE__ << "UAS CLICKED!";
     }
 }
 
@@ -434,6 +440,7 @@ void UASView::contextMenuEvent (QContextMenuEvent* event)
     if (timeout) {
         menu.addAction(removeAction);
     }
+    menu.addAction(hilAction);
     menu.addAction(selectAirframeAction);
     menu.addAction(setBatterySpecsAction);
     menu.exec(event->globalPos());
@@ -496,7 +503,7 @@ void UASView::refresh()
     //repaint();
 
     static quint64 lastupdate = 0;
-    //qDebug() << "UASVIEW update diff: " << MG::TIME::getGroundTimeNow() - lastupdate;
+    //// qDebug() << "UASVIEW update diff: " << MG::TIME::getGroundTimeNow() - lastupdate;
     lastupdate = MG::TIME::getGroundTimeNow();
 
     // FIXME
@@ -504,10 +511,10 @@ void UASView::refresh()
 
     if (generalUpdateCount == 4) {
 #if (QGC_EVENTLOOP_DEBUG)
-        qDebug() << "EVENTLOOP:" << __FILE__ << __LINE__;
+        // qDebug() << "EVENTLOOP:" << __FILE__ << __LINE__;
 #endif
         generalUpdateCount = 0;
-        //qDebug() << "UPDATING EVERYTHING";
+        //// qDebug() << "UPDATING EVERYTHING";
         // State
         m_ui->stateLabel->setText(state);
         m_ui->statusTextLabel->setText(stateDesc);
@@ -599,6 +606,8 @@ void UASView::refresh()
             m_ui->heartbeatIcon->setStyleSheet(colorstyle.arg(warnColor.name()));
             QString style = QString("QGroupBox { border-radius: 12px; padding: 0px; margin: 0px; border: 2px solid %1; background-color: %2; }").arg(borderColor, warnColor.name());
             m_ui->uasViewFrame->setStyleSheet(style);
+
+            refreshTimer->setInterval(errorUpdateInterval);
         }
         iconIsRed = !iconIsRed;
     } else {
@@ -606,10 +615,11 @@ void UASView::refresh()
         {
             // Fade heartbeat icon
             // Make color darker
-            heartbeatColor = heartbeatColor.darker(150);
+            heartbeatColor = heartbeatColor.darker(210);
 
             //m_ui->heartbeatIcon->setAutoFillBackground(true);
             m_ui->heartbeatIcon->setStyleSheet(colorstyle.arg(heartbeatColor.name()));
+            refreshTimer->setInterval(updateInterval);
         }
     }
     //setUpdatesEnabled(true);

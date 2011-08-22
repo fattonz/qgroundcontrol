@@ -16,57 +16,9 @@
 # You should have received a copy of the GNU General Public License
 # along with QGroundControl. If not, see <http://www.gnu.org/licenses/>.
 # -------------------------------------------------
-# Include QMapControl map library
-# prefer version from external directory /
-# from http://github.com/pixhawk/qmapcontrol/
-# over bundled version in lib directory
-# Version from GIT repository is preferred
-# include ( "../qmapcontrol/QMapControl/QMapControl.pri" ) #{
-# Include bundled version if necessary
-# include(lib/QMapControl/QMapControl.pri)
-include(lib/nmea/nmea.pri)
 
-# This is a HACK - linking to openpilot repo for now
-# OPMapControl is a OpenPilot-independent map library
-# provided by the OpenPilot team - thanks, great piece
-# of open-source software!
-# (We're not reusing any part of the OP GCS, just the map library)
 
-# Try to get it from OP mainline, if this fails fall back to internal copies
-exists(../openpilot/ground/openpilotgcs/src/libs) {
-include(../openpilot/ground/openpilotgcs/src/libs/utils/utils_external.pri)
-include(../openpilot/ground/openpilotgcs/src/libs/opmapcontrol/opmapcontrol_external.pri)
-DEPENDPATH += \
-    ../openpilot/ground/openpilotgcs/src/libs/utils \
-    ../openpilot/ground/openpilotgcs/src/libs/utils/src \
-    ../openpilot/ground/openpilotgcs/src/libs/opmapcontrol \
-    ../openpilot/ground/openpilotgcs/src/libs/opmapcontrol/src
-
-INCLUDEPATH += \
-    ../openpilot/ground/openpilotgcs/src/libs/utils \
-    ../openpilot/ground/openpilotgcs/src/libs \
-    ../openpilot/ground/openpilotgcs/src/libs/opmapcontrol
-
-    message("----- USING MAINLINE OPENPILOT FROM ../openpilot -----")
-    message("Using OpenPilot's mapcontrol library from external folder")
-    message("------------------------------------------------------------------------")
-} else {
-include(src/libs/utils/utils_external.pri)
-include(src/libs/opmapcontrol/opmapcontrol_external.pri)
-DEPENDPATH += \
-    src/libs/utils \
-    src/libs/utils/src \
-    src/libs/opmapcontrol \
-    src/libs/opmapcontrol/src
-
-INCLUDEPATH += \
-    src/libs/utils \
-    src/libs \
-    src/libs/opmapcontrol
-}
-
-# include(lib/opmapcontrol/opmapcontrol.pri)
-# message("Including bundled QMapControl version as FALLBACK. This is fine on Linux and MacOS, but not the best choice in Windows")
+# Qt configuration
 QT += network \
     opengl \
     svg \
@@ -74,6 +26,7 @@ QT += network \
     phonon \
     webkit \
     sql
+
 TEMPLATE = app
 TARGET = qgroundcontrol
 BASEDIR = $$IN_PWD
@@ -82,8 +35,35 @@ BUILDDIR = $$TARGETDIR/build
 LANGUAGE = C++
 OBJECTS_DIR = $$BUILDDIR/obj
 MOC_DIR = $$BUILDDIR/moc
-UI_HEADERS_DIR = src/ui/generated
+UI_HEADERS_DIR = $$BUILDDIR/ui
+RCC_DIR = $$BUILDDIR/rcc
 MAVLINK_CONF = ""
+DEFINES += MAVLINK_NO_DATA
+
+
+#################################################################
+# EXTERNAL LIBRARY CONFIGURATION
+
+# Include NMEA parsing library (currently unused)
+include(src/libs/nmea/nmea.pri)
+
+# EIGEN matrix library (header-only)
+INCLUDEPATH += src/libs/eigen
+
+# OPMapControl library (from OpenPilot)
+include(src/libs/utils/utils_external.pri)
+include(src/libs/opmapcontrol/opmapcontrol_external.pri)
+DEPENDPATH += \
+    src/libs/utils \
+    src/libs/utils/src \
+    src/libs/opmapcontrol \
+    src/libs/opmapcontrol/src \
+    src/libs/opmapcontrol/src/mapwidget
+
+INCLUDEPATH += \
+    src/libs/utils \
+    src/libs \
+    src/libs/opmapcontrol
 
 # If the user config file exists, it will be included.
 # if the variable MAVLINK_CONF contains the name of an
@@ -140,11 +120,24 @@ contains(MAVLINK_CONF, ardupilotmega) {
     DEFINES += QGC_USE_ARDUPILOTMEGA_MESSAGES
 }
 
-# }
-# Include general settings for MAVGround
+
+# Include general settings for QGroundControl
 # necessary as last include to override any non-acceptable settings
 # done by the plugins above
 include(qgroundcontrol.pri)
+
+# Include MAVLink generator
+DEPENDPATH += \
+    src/apps/mavlinkgen
+
+INCLUDEPATH += \
+    src/apps/mavlinkgen \
+    src/apps/mavlinkgen/ui \
+    src/apps/mavlinkgen/generator
+
+include(src/apps/mavlinkgen/mavlinkgen.pri)
+
+
 
 # Include QWT plotting library
 include(src/lib/qwt/qwt.pri)
@@ -161,19 +154,14 @@ INCLUDEPATH += . \
     thirdParty/qserialport/src \
     src/libs/qextserialport
 
-# Include serial port library
-# include(src/lib/qextserialport/qextserialport.pri)
-# include qserial library
+# Include serial port library (QSerial)
 include(thirdParty/qserialport/qgroundcontrol-qserialport.pri)
 
-# Serial port detection
+# Serial port detection (ripped-off from qextserialport library)
 macx::SOURCES += src/libs/qextserialport/qextserialenumerator_osx.cpp
 linux-g++::SOURCES += src/libs/qextserialport/qextserialenumerator_unix.cpp
 win32::SOURCES += src/libs/qextserialport/qextserialenumerator_win.cpp
 
-# ../mavlink/include \
-# MAVLink/include \
-# mavlink/include
 # Input
 FORMS += src/ui/MainWindow.ui \
     src/ui/CommSettings.ui \
@@ -189,7 +177,6 @@ FORMS += src/ui/MainWindow.ui \
     src/ui/ObjectDetectionView.ui \
     src/ui/JoystickWidget.ui \
     src/ui/DebugConsole.ui \
-    src/ui/XMLCommProtocolWidget.ui \
     src/ui/HDDisplay.ui \
     src/ui/MAVLinkSettingsWidget.ui \
     src/ui/AudioOutputWidget.ui \
@@ -249,7 +236,7 @@ HEADERS += src/MG.h \
     src/comm/SerialSimulationLink.h \
     src/comm/ProtocolInterface.h \
     src/comm/MAVLinkProtocol.h \
-    src/comm/AS4Protocol.h \
+    src/comm/QGCFlightGearLink.h \
     src/ui/CommConfigurationWindow.h \
     src/ui/SerialConfigurationWindow.h \
     src/ui/MainWindow.h \
@@ -274,10 +261,6 @@ HEADERS += src/MG.h \
     src/input/JoystickInput.h \
     src/ui/JoystickWidget.h \
     src/ui/DebugConsole.h \
-    src/ui/XMLCommProtocolWidget.h \
-    src/ui/mavlink/DomItem.h \
-    src/ui/mavlink/DomModel.h \
-    src/comm/MAVLinkXMLParser.h \
     src/ui/HDDisplay.h \
     src/ui/MAVLinkSettingsWidget.h \
     src/ui/AudioOutputWidget.h \
@@ -289,7 +272,6 @@ HEADERS += src/MG.h \
     src/uas/SlugsMAV.h \
     src/uas/PxQuadMAV.h \
     src/uas/ArduPilotMegaMAV.h \
-    src/comm/MAVLinkSyntaxHighlighter.h \
     src/ui/watchdog/WatchdogControl.h \
     src/ui/watchdog/WatchdogProcessView.h \
     src/ui/watchdog/WatchdogView.h \
@@ -318,7 +300,6 @@ HEADERS += src/MG.h \
     src/ui/uas/QGCUnconnectedInfoWidget.h \
     src/ui/designer/QGCToolWidget.h \
     src/ui/designer/QGCParamSlider.h \
-    src/ui/designer/QGCActionButton.h \
     src/ui/designer/QGCCommandButton.h \
     src/ui/designer/QGCToolWidgetItem.h \
     src/ui/QGCMAVLinkLogPlayer.h \
@@ -335,13 +316,14 @@ HEADERS += src/MG.h \
     src/ui/map/QGCMapWidget.h \
     src/ui/map/MAV2DIcon.h \
     src/ui/map/Waypoint2DIcon.h \
-    src/ui/mavlink/QGCMAVLinkTextEdit.h \
     src/ui/map/QGCMapTool.h \
     src/ui/map/QGCMapToolBar.h \
-    src/libs/qextserialport/qextserialenumerator.h
+    src/libs/qextserialport/qextserialenumerator.h \
+    src/QGCGeo.h \
+    src/ui/QGCToolBar.h
 
 # Google Earth is only supported on Mac OS and Windows with Visual Studio Compiler
-macx|win32-msvc2008::HEADERS += src/ui/map3D/QGCGoogleEarthView.h
+macx|win32-msvc2008|win32-msvc2010::HEADERS += src/ui/map3D/QGCGoogleEarthView.h
 contains(DEPENDENCIES_PRESENT, osg) { 
     message("Including headers for OpenSceneGraph")
     
@@ -378,10 +360,11 @@ SOURCES += src/main.cc \
     src/uas/UASManager.cc \
     src/uas/UAS.cc \
     src/comm/LinkManager.cc \
+    src/comm/LinkInterface.cpp \
     src/comm/SerialLink.cc \
     src/comm/SerialSimulationLink.cc \
     src/comm/MAVLinkProtocol.cc \
-    src/comm/AS4Protocol.cc \
+    src/comm/QGCFlightGearLink.cc \
     src/ui/CommConfigurationWindow.cc \
     src/ui/SerialConfigurationWindow.cc \
     src/ui/MainWindow.cc \
@@ -405,10 +388,6 @@ SOURCES += src/main.cc \
     src/input/JoystickInput.cc \
     src/ui/JoystickWidget.cc \
     src/ui/DebugConsole.cc \
-    src/ui/XMLCommProtocolWidget.cc \
-    src/ui/mavlink/DomItem.cc \
-    src/ui/mavlink/DomModel.cc \
-    src/comm/MAVLinkXMLParser.cc \
     src/ui/HDDisplay.cc \
     src/ui/MAVLinkSettingsWidget.cc \
     src/ui/AudioOutputWidget.cc \
@@ -420,7 +399,6 @@ SOURCES += src/main.cc \
     src/uas/SlugsMAV.cc \
     src/uas/PxQuadMAV.cc \
     src/uas/ArduPilotMegaMAV.cc \
-    src/comm/MAVLinkSyntaxHighlighter.cc \
     src/ui/watchdog/WatchdogControl.cc \
     src/ui/watchdog/WatchdogProcessView.cc \
     src/ui/watchdog/WatchdogView.cc \
@@ -448,7 +426,6 @@ SOURCES += src/main.cc \
     src/ui/uas/QGCUnconnectedInfoWidget.cc \
     src/ui/designer/QGCToolWidget.cc \
     src/ui/designer/QGCParamSlider.cc \
-    src/ui/designer/QGCActionButton.cc \
     src/ui/designer/QGCCommandButton.cc \
     src/ui/designer/QGCToolWidgetItem.cc \
     src/ui/QGCMAVLinkLogPlayer.cc \
@@ -465,10 +442,14 @@ SOURCES += src/main.cc \
     src/ui/map/QGCMapWidget.cc \
     src/ui/map/MAV2DIcon.cc \
     src/ui/map/Waypoint2DIcon.cc \
-    src/ui/mavlink/QGCMAVLinkTextEdit.cc \
     src/ui/map/QGCMapTool.cc \
-    src/ui/map/QGCMapToolBar.cc
-macx|win32-msvc2008::SOURCES += src/ui/map3D/QGCGoogleEarthView.cc
+    src/ui/map/QGCMapToolBar.cc \
+    src/ui/QGCToolBar.cc
+
+# Enable Google Earth only on Mac OS and Windows with Visual Studio compiler
+macx|win32-msvc2008|win32-msvc2010::SOURCES += src/ui/map3D/QGCGoogleEarthView.cc
+
+# Enable OSG only if it has been found
 contains(DEPENDENCIES_PRESENT, osg) { 
     message("Including sources for OpenSceneGraph")
     
@@ -500,7 +481,9 @@ contains(DEPENDENCIES_PRESENT, libfreenect) {
     # Enable only if libfreenect is available
     SOURCES += src/input/Freenect.cc
 }
-RESOURCES += mavground.qrc
+
+# Add icons and other resources
+RESOURCES += qgroundcontrol.qrc
 
 # Include RT-LAB Library
 win32:exists(src/lib/opalrt/OpalApi.h):exists(C:/OPAL-RT/RT-LAB7.2.4/Common/bin) { 
@@ -525,3 +508,20 @@ win32:exists(src/lib/opalrt/OpalApi.h):exists(C:/OPAL-RT/RT-LAB7.2.4/Common/bin)
 }
 TRANSLATIONS += es-MX.ts \
     en-US.ts
+
+## xbee support
+## libxbee only supported by linux and windows systems
+##win32-msvc2008|win32-msvc2010|linux{
+#    HEADERS += src/comm/XbeeLinkInterface.h \
+#	src/comm/XbeeLink.h \
+#	src/ui/XbeeConfigurationWindow.h \
+#	src/comm/CallConv.h
+#    SOURCES += src/comm/XbeeLink.cpp \
+#	src/ui/XbeeConfigurationWindow.cpp
+#    DEFINES += XBEELINK
+#    INCLUDEPATH += thirdParty/libxbee
+## TO DO: build library when it does not exists already
+#    LIBS += -LthirdParty/libxbee/lib \
+#	-llibxbee
+#
+#}

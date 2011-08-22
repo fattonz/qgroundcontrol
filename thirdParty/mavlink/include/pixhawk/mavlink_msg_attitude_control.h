@@ -1,22 +1,24 @@
 // MESSAGE ATTITUDE_CONTROL PACKING
 
 #define MAVLINK_MSG_ID_ATTITUDE_CONTROL 85
+#define MAVLINK_MSG_ID_ATTITUDE_CONTROL_LEN 21
+#define MAVLINK_MSG_85_LEN 21
+#define MAVLINK_MSG_ID_ATTITUDE_CONTROL_KEY 0x7F
+#define MAVLINK_MSG_85_KEY 0x7F
 
 typedef struct __mavlink_attitude_control_t 
 {
-	uint8_t target; ///< The system to be controlled
-	float roll; ///< roll
-	float pitch; ///< pitch
-	float yaw; ///< yaw
-	float thrust; ///< thrust
-	uint8_t roll_manual; ///< roll control enabled auto:0, manual:1
-	uint8_t pitch_manual; ///< pitch auto:0, manual:1
-	uint8_t yaw_manual; ///< yaw auto:0, manual:1
-	uint8_t thrust_manual; ///< thrust auto:0, manual:1
+	float roll;	///< roll
+	float pitch;	///< pitch
+	float yaw;	///< yaw
+	float thrust;	///< thrust
+	uint8_t target;	///< The system to be controlled
+	uint8_t roll_manual;	///< roll control enabled auto:0, manual:1
+	uint8_t pitch_manual;	///< pitch auto:0, manual:1
+	uint8_t yaw_manual;	///< yaw auto:0, manual:1
+	uint8_t thrust_manual;	///< thrust auto:0, manual:1
 
 } mavlink_attitude_control_t;
-
-
 
 /**
  * @brief Pack a attitude_control message
@@ -37,20 +39,20 @@ typedef struct __mavlink_attitude_control_t
  */
 static inline uint16_t mavlink_msg_attitude_control_pack(uint8_t system_id, uint8_t component_id, mavlink_message_t* msg, uint8_t target, float roll, float pitch, float yaw, float thrust, uint8_t roll_manual, uint8_t pitch_manual, uint8_t yaw_manual, uint8_t thrust_manual)
 {
-	uint16_t i = 0;
+	mavlink_attitude_control_t *p = (mavlink_attitude_control_t *)&msg->payload[0];
 	msg->msgid = MAVLINK_MSG_ID_ATTITUDE_CONTROL;
 
-	i += put_uint8_t_by_index(target, i, msg->payload); // The system to be controlled
-	i += put_float_by_index(roll, i, msg->payload); // roll
-	i += put_float_by_index(pitch, i, msg->payload); // pitch
-	i += put_float_by_index(yaw, i, msg->payload); // yaw
-	i += put_float_by_index(thrust, i, msg->payload); // thrust
-	i += put_uint8_t_by_index(roll_manual, i, msg->payload); // roll control enabled auto:0, manual:1
-	i += put_uint8_t_by_index(pitch_manual, i, msg->payload); // pitch auto:0, manual:1
-	i += put_uint8_t_by_index(yaw_manual, i, msg->payload); // yaw auto:0, manual:1
-	i += put_uint8_t_by_index(thrust_manual, i, msg->payload); // thrust auto:0, manual:1
+	p->target = target;	// uint8_t:The system to be controlled
+	p->roll = roll;	// float:roll
+	p->pitch = pitch;	// float:pitch
+	p->yaw = yaw;	// float:yaw
+	p->thrust = thrust;	// float:thrust
+	p->roll_manual = roll_manual;	// uint8_t:roll control enabled auto:0, manual:1
+	p->pitch_manual = pitch_manual;	// uint8_t:pitch auto:0, manual:1
+	p->yaw_manual = yaw_manual;	// uint8_t:yaw auto:0, manual:1
+	p->thrust_manual = thrust_manual;	// uint8_t:thrust auto:0, manual:1
 
-	return mavlink_finalize_message(msg, system_id, component_id, i);
+	return mavlink_finalize_message(msg, system_id, component_id, MAVLINK_MSG_ID_ATTITUDE_CONTROL_LEN);
 }
 
 /**
@@ -72,20 +74,20 @@ static inline uint16_t mavlink_msg_attitude_control_pack(uint8_t system_id, uint
  */
 static inline uint16_t mavlink_msg_attitude_control_pack_chan(uint8_t system_id, uint8_t component_id, uint8_t chan, mavlink_message_t* msg, uint8_t target, float roll, float pitch, float yaw, float thrust, uint8_t roll_manual, uint8_t pitch_manual, uint8_t yaw_manual, uint8_t thrust_manual)
 {
-	uint16_t i = 0;
+	mavlink_attitude_control_t *p = (mavlink_attitude_control_t *)&msg->payload[0];
 	msg->msgid = MAVLINK_MSG_ID_ATTITUDE_CONTROL;
 
-	i += put_uint8_t_by_index(target, i, msg->payload); // The system to be controlled
-	i += put_float_by_index(roll, i, msg->payload); // roll
-	i += put_float_by_index(pitch, i, msg->payload); // pitch
-	i += put_float_by_index(yaw, i, msg->payload); // yaw
-	i += put_float_by_index(thrust, i, msg->payload); // thrust
-	i += put_uint8_t_by_index(roll_manual, i, msg->payload); // roll control enabled auto:0, manual:1
-	i += put_uint8_t_by_index(pitch_manual, i, msg->payload); // pitch auto:0, manual:1
-	i += put_uint8_t_by_index(yaw_manual, i, msg->payload); // yaw auto:0, manual:1
-	i += put_uint8_t_by_index(thrust_manual, i, msg->payload); // thrust auto:0, manual:1
+	p->target = target;	// uint8_t:The system to be controlled
+	p->roll = roll;	// float:roll
+	p->pitch = pitch;	// float:pitch
+	p->yaw = yaw;	// float:yaw
+	p->thrust = thrust;	// float:thrust
+	p->roll_manual = roll_manual;	// uint8_t:roll control enabled auto:0, manual:1
+	p->pitch_manual = pitch_manual;	// uint8_t:pitch auto:0, manual:1
+	p->yaw_manual = yaw_manual;	// uint8_t:yaw auto:0, manual:1
+	p->thrust_manual = thrust_manual;	// uint8_t:thrust auto:0, manual:1
 
-	return mavlink_finalize_message_chan(msg, system_id, component_id, chan, i);
+	return mavlink_finalize_message_chan(msg, system_id, component_id, chan, MAVLINK_MSG_ID_ATTITUDE_CONTROL_LEN);
 }
 
 /**
@@ -101,6 +103,8 @@ static inline uint16_t mavlink_msg_attitude_control_encode(uint8_t system_id, ui
 	return mavlink_msg_attitude_control_pack(system_id, component_id, msg, attitude_control->target, attitude_control->roll, attitude_control->pitch, attitude_control->yaw, attitude_control->thrust, attitude_control->roll_manual, attitude_control->pitch_manual, attitude_control->yaw_manual, attitude_control->thrust_manual);
 }
 
+
+#ifdef MAVLINK_USE_CONVENIENCE_FUNCTIONS
 /**
  * @brief Send a attitude_control message
  * @param chan MAVLink channel to send the message
@@ -115,13 +119,37 @@ static inline uint16_t mavlink_msg_attitude_control_encode(uint8_t system_id, ui
  * @param yaw_manual yaw auto:0, manual:1
  * @param thrust_manual thrust auto:0, manual:1
  */
-#ifdef MAVLINK_USE_CONVENIENCE_FUNCTIONS
-
 static inline void mavlink_msg_attitude_control_send(mavlink_channel_t chan, uint8_t target, float roll, float pitch, float yaw, float thrust, uint8_t roll_manual, uint8_t pitch_manual, uint8_t yaw_manual, uint8_t thrust_manual)
 {
-	mavlink_message_t msg;
-	mavlink_msg_attitude_control_pack_chan(mavlink_system.sysid, mavlink_system.compid, chan, &msg, target, roll, pitch, yaw, thrust, roll_manual, pitch_manual, yaw_manual, thrust_manual);
-	mavlink_send_uart(chan, &msg);
+	mavlink_header_t hdr;
+	mavlink_attitude_control_t payload;
+
+	MAVLINK_BUFFER_CHECK_START( chan, MAVLINK_MSG_ID_ATTITUDE_CONTROL_LEN )
+	payload.target = target;	// uint8_t:The system to be controlled
+	payload.roll = roll;	// float:roll
+	payload.pitch = pitch;	// float:pitch
+	payload.yaw = yaw;	// float:yaw
+	payload.thrust = thrust;	// float:thrust
+	payload.roll_manual = roll_manual;	// uint8_t:roll control enabled auto:0, manual:1
+	payload.pitch_manual = pitch_manual;	// uint8_t:pitch auto:0, manual:1
+	payload.yaw_manual = yaw_manual;	// uint8_t:yaw auto:0, manual:1
+	payload.thrust_manual = thrust_manual;	// uint8_t:thrust auto:0, manual:1
+
+	hdr.STX = MAVLINK_STX;
+	hdr.len = MAVLINK_MSG_ID_ATTITUDE_CONTROL_LEN;
+	hdr.msgid = MAVLINK_MSG_ID_ATTITUDE_CONTROL;
+	hdr.sysid = mavlink_system.sysid;
+	hdr.compid = mavlink_system.compid;
+	hdr.seq = mavlink_get_channel_status(chan)->current_tx_seq;
+	mavlink_get_channel_status(chan)->current_tx_seq = hdr.seq + 1;
+	mavlink_send_mem(chan, (uint8_t *)&hdr.STX, MAVLINK_NUM_HEADER_BYTES );
+
+	crc_init(&hdr.ck);
+	crc_calculate_mem((uint8_t *)&hdr.len, &hdr.ck, MAVLINK_CORE_HEADER_LEN);
+	crc_calculate_mem((uint8_t *)&payload, &hdr.ck, hdr.len );
+	crc_accumulate( 0x7F, &hdr.ck); /// include key in X25 checksum
+	mavlink_send_mem(chan, (uint8_t *)&hdr.ck, MAVLINK_NUM_CHECKSUM_BYTES);
+	MAVLINK_BUFFER_CHECK_END
 }
 
 #endif
@@ -134,7 +162,8 @@ static inline void mavlink_msg_attitude_control_send(mavlink_channel_t chan, uin
  */
 static inline uint8_t mavlink_msg_attitude_control_get_target(const mavlink_message_t* msg)
 {
-	return (uint8_t)(msg->payload)[0];
+	mavlink_attitude_control_t *p = (mavlink_attitude_control_t *)&msg->payload[0];
+	return (uint8_t)(p->target);
 }
 
 /**
@@ -144,12 +173,8 @@ static inline uint8_t mavlink_msg_attitude_control_get_target(const mavlink_mess
  */
 static inline float mavlink_msg_attitude_control_get_roll(const mavlink_message_t* msg)
 {
-	generic_32bit r;
-	r.b[3] = (msg->payload+sizeof(uint8_t))[0];
-	r.b[2] = (msg->payload+sizeof(uint8_t))[1];
-	r.b[1] = (msg->payload+sizeof(uint8_t))[2];
-	r.b[0] = (msg->payload+sizeof(uint8_t))[3];
-	return (float)r.f;
+	mavlink_attitude_control_t *p = (mavlink_attitude_control_t *)&msg->payload[0];
+	return (float)(p->roll);
 }
 
 /**
@@ -159,12 +184,8 @@ static inline float mavlink_msg_attitude_control_get_roll(const mavlink_message_
  */
 static inline float mavlink_msg_attitude_control_get_pitch(const mavlink_message_t* msg)
 {
-	generic_32bit r;
-	r.b[3] = (msg->payload+sizeof(uint8_t)+sizeof(float))[0];
-	r.b[2] = (msg->payload+sizeof(uint8_t)+sizeof(float))[1];
-	r.b[1] = (msg->payload+sizeof(uint8_t)+sizeof(float))[2];
-	r.b[0] = (msg->payload+sizeof(uint8_t)+sizeof(float))[3];
-	return (float)r.f;
+	mavlink_attitude_control_t *p = (mavlink_attitude_control_t *)&msg->payload[0];
+	return (float)(p->pitch);
 }
 
 /**
@@ -174,12 +195,8 @@ static inline float mavlink_msg_attitude_control_get_pitch(const mavlink_message
  */
 static inline float mavlink_msg_attitude_control_get_yaw(const mavlink_message_t* msg)
 {
-	generic_32bit r;
-	r.b[3] = (msg->payload+sizeof(uint8_t)+sizeof(float)+sizeof(float))[0];
-	r.b[2] = (msg->payload+sizeof(uint8_t)+sizeof(float)+sizeof(float))[1];
-	r.b[1] = (msg->payload+sizeof(uint8_t)+sizeof(float)+sizeof(float))[2];
-	r.b[0] = (msg->payload+sizeof(uint8_t)+sizeof(float)+sizeof(float))[3];
-	return (float)r.f;
+	mavlink_attitude_control_t *p = (mavlink_attitude_control_t *)&msg->payload[0];
+	return (float)(p->yaw);
 }
 
 /**
@@ -189,12 +206,8 @@ static inline float mavlink_msg_attitude_control_get_yaw(const mavlink_message_t
  */
 static inline float mavlink_msg_attitude_control_get_thrust(const mavlink_message_t* msg)
 {
-	generic_32bit r;
-	r.b[3] = (msg->payload+sizeof(uint8_t)+sizeof(float)+sizeof(float)+sizeof(float))[0];
-	r.b[2] = (msg->payload+sizeof(uint8_t)+sizeof(float)+sizeof(float)+sizeof(float))[1];
-	r.b[1] = (msg->payload+sizeof(uint8_t)+sizeof(float)+sizeof(float)+sizeof(float))[2];
-	r.b[0] = (msg->payload+sizeof(uint8_t)+sizeof(float)+sizeof(float)+sizeof(float))[3];
-	return (float)r.f;
+	mavlink_attitude_control_t *p = (mavlink_attitude_control_t *)&msg->payload[0];
+	return (float)(p->thrust);
 }
 
 /**
@@ -204,7 +217,8 @@ static inline float mavlink_msg_attitude_control_get_thrust(const mavlink_messag
  */
 static inline uint8_t mavlink_msg_attitude_control_get_roll_manual(const mavlink_message_t* msg)
 {
-	return (uint8_t)(msg->payload+sizeof(uint8_t)+sizeof(float)+sizeof(float)+sizeof(float)+sizeof(float))[0];
+	mavlink_attitude_control_t *p = (mavlink_attitude_control_t *)&msg->payload[0];
+	return (uint8_t)(p->roll_manual);
 }
 
 /**
@@ -214,7 +228,8 @@ static inline uint8_t mavlink_msg_attitude_control_get_roll_manual(const mavlink
  */
 static inline uint8_t mavlink_msg_attitude_control_get_pitch_manual(const mavlink_message_t* msg)
 {
-	return (uint8_t)(msg->payload+sizeof(uint8_t)+sizeof(float)+sizeof(float)+sizeof(float)+sizeof(float)+sizeof(uint8_t))[0];
+	mavlink_attitude_control_t *p = (mavlink_attitude_control_t *)&msg->payload[0];
+	return (uint8_t)(p->pitch_manual);
 }
 
 /**
@@ -224,7 +239,8 @@ static inline uint8_t mavlink_msg_attitude_control_get_pitch_manual(const mavlin
  */
 static inline uint8_t mavlink_msg_attitude_control_get_yaw_manual(const mavlink_message_t* msg)
 {
-	return (uint8_t)(msg->payload+sizeof(uint8_t)+sizeof(float)+sizeof(float)+sizeof(float)+sizeof(float)+sizeof(uint8_t)+sizeof(uint8_t))[0];
+	mavlink_attitude_control_t *p = (mavlink_attitude_control_t *)&msg->payload[0];
+	return (uint8_t)(p->yaw_manual);
 }
 
 /**
@@ -234,7 +250,8 @@ static inline uint8_t mavlink_msg_attitude_control_get_yaw_manual(const mavlink_
  */
 static inline uint8_t mavlink_msg_attitude_control_get_thrust_manual(const mavlink_message_t* msg)
 {
-	return (uint8_t)(msg->payload+sizeof(uint8_t)+sizeof(float)+sizeof(float)+sizeof(float)+sizeof(float)+sizeof(uint8_t)+sizeof(uint8_t)+sizeof(uint8_t))[0];
+	mavlink_attitude_control_t *p = (mavlink_attitude_control_t *)&msg->payload[0];
+	return (uint8_t)(p->thrust_manual);
 }
 
 /**
@@ -245,13 +262,5 @@ static inline uint8_t mavlink_msg_attitude_control_get_thrust_manual(const mavli
  */
 static inline void mavlink_msg_attitude_control_decode(const mavlink_message_t* msg, mavlink_attitude_control_t* attitude_control)
 {
-	attitude_control->target = mavlink_msg_attitude_control_get_target(msg);
-	attitude_control->roll = mavlink_msg_attitude_control_get_roll(msg);
-	attitude_control->pitch = mavlink_msg_attitude_control_get_pitch(msg);
-	attitude_control->yaw = mavlink_msg_attitude_control_get_yaw(msg);
-	attitude_control->thrust = mavlink_msg_attitude_control_get_thrust(msg);
-	attitude_control->roll_manual = mavlink_msg_attitude_control_get_roll_manual(msg);
-	attitude_control->pitch_manual = mavlink_msg_attitude_control_get_pitch_manual(msg);
-	attitude_control->yaw_manual = mavlink_msg_attitude_control_get_yaw_manual(msg);
-	attitude_control->thrust_manual = mavlink_msg_attitude_control_get_thrust_manual(msg);
+	memcpy( attitude_control, msg->payload, sizeof(mavlink_attitude_control_t));
 }

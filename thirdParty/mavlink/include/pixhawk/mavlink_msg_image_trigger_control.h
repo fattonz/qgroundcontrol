@@ -1,14 +1,16 @@
 // MESSAGE IMAGE_TRIGGER_CONTROL PACKING
 
 #define MAVLINK_MSG_ID_IMAGE_TRIGGER_CONTROL 102
+#define MAVLINK_MSG_ID_IMAGE_TRIGGER_CONTROL_LEN 1
+#define MAVLINK_MSG_102_LEN 1
+#define MAVLINK_MSG_ID_IMAGE_TRIGGER_CONTROL_KEY 0xEE
+#define MAVLINK_MSG_102_KEY 0xEE
 
 typedef struct __mavlink_image_trigger_control_t 
 {
-	uint8_t enable; ///< 0 to disable, 1 to enable
+	uint8_t enable;	///< 0 to disable, 1 to enable
 
 } mavlink_image_trigger_control_t;
-
-
 
 /**
  * @brief Pack a image_trigger_control message
@@ -21,12 +23,12 @@ typedef struct __mavlink_image_trigger_control_t
  */
 static inline uint16_t mavlink_msg_image_trigger_control_pack(uint8_t system_id, uint8_t component_id, mavlink_message_t* msg, uint8_t enable)
 {
-	uint16_t i = 0;
+	mavlink_image_trigger_control_t *p = (mavlink_image_trigger_control_t *)&msg->payload[0];
 	msg->msgid = MAVLINK_MSG_ID_IMAGE_TRIGGER_CONTROL;
 
-	i += put_uint8_t_by_index(enable, i, msg->payload); // 0 to disable, 1 to enable
+	p->enable = enable;	// uint8_t:0 to disable, 1 to enable
 
-	return mavlink_finalize_message(msg, system_id, component_id, i);
+	return mavlink_finalize_message(msg, system_id, component_id, MAVLINK_MSG_ID_IMAGE_TRIGGER_CONTROL_LEN);
 }
 
 /**
@@ -40,12 +42,12 @@ static inline uint16_t mavlink_msg_image_trigger_control_pack(uint8_t system_id,
  */
 static inline uint16_t mavlink_msg_image_trigger_control_pack_chan(uint8_t system_id, uint8_t component_id, uint8_t chan, mavlink_message_t* msg, uint8_t enable)
 {
-	uint16_t i = 0;
+	mavlink_image_trigger_control_t *p = (mavlink_image_trigger_control_t *)&msg->payload[0];
 	msg->msgid = MAVLINK_MSG_ID_IMAGE_TRIGGER_CONTROL;
 
-	i += put_uint8_t_by_index(enable, i, msg->payload); // 0 to disable, 1 to enable
+	p->enable = enable;	// uint8_t:0 to disable, 1 to enable
 
-	return mavlink_finalize_message_chan(msg, system_id, component_id, chan, i);
+	return mavlink_finalize_message_chan(msg, system_id, component_id, chan, MAVLINK_MSG_ID_IMAGE_TRIGGER_CONTROL_LEN);
 }
 
 /**
@@ -61,19 +63,37 @@ static inline uint16_t mavlink_msg_image_trigger_control_encode(uint8_t system_i
 	return mavlink_msg_image_trigger_control_pack(system_id, component_id, msg, image_trigger_control->enable);
 }
 
+
+#ifdef MAVLINK_USE_CONVENIENCE_FUNCTIONS
 /**
  * @brief Send a image_trigger_control message
  * @param chan MAVLink channel to send the message
  *
  * @param enable 0 to disable, 1 to enable
  */
-#ifdef MAVLINK_USE_CONVENIENCE_FUNCTIONS
-
 static inline void mavlink_msg_image_trigger_control_send(mavlink_channel_t chan, uint8_t enable)
 {
-	mavlink_message_t msg;
-	mavlink_msg_image_trigger_control_pack_chan(mavlink_system.sysid, mavlink_system.compid, chan, &msg, enable);
-	mavlink_send_uart(chan, &msg);
+	mavlink_header_t hdr;
+	mavlink_image_trigger_control_t payload;
+
+	MAVLINK_BUFFER_CHECK_START( chan, MAVLINK_MSG_ID_IMAGE_TRIGGER_CONTROL_LEN )
+	payload.enable = enable;	// uint8_t:0 to disable, 1 to enable
+
+	hdr.STX = MAVLINK_STX;
+	hdr.len = MAVLINK_MSG_ID_IMAGE_TRIGGER_CONTROL_LEN;
+	hdr.msgid = MAVLINK_MSG_ID_IMAGE_TRIGGER_CONTROL;
+	hdr.sysid = mavlink_system.sysid;
+	hdr.compid = mavlink_system.compid;
+	hdr.seq = mavlink_get_channel_status(chan)->current_tx_seq;
+	mavlink_get_channel_status(chan)->current_tx_seq = hdr.seq + 1;
+	mavlink_send_mem(chan, (uint8_t *)&hdr.STX, MAVLINK_NUM_HEADER_BYTES );
+
+	crc_init(&hdr.ck);
+	crc_calculate_mem((uint8_t *)&hdr.len, &hdr.ck, MAVLINK_CORE_HEADER_LEN);
+	crc_calculate_mem((uint8_t *)&payload, &hdr.ck, hdr.len );
+	crc_accumulate( 0xEE, &hdr.ck); /// include key in X25 checksum
+	mavlink_send_mem(chan, (uint8_t *)&hdr.ck, MAVLINK_NUM_CHECKSUM_BYTES);
+	MAVLINK_BUFFER_CHECK_END
 }
 
 #endif
@@ -86,7 +106,8 @@ static inline void mavlink_msg_image_trigger_control_send(mavlink_channel_t chan
  */
 static inline uint8_t mavlink_msg_image_trigger_control_get_enable(const mavlink_message_t* msg)
 {
-	return (uint8_t)(msg->payload)[0];
+	mavlink_image_trigger_control_t *p = (mavlink_image_trigger_control_t *)&msg->payload[0];
+	return (uint8_t)(p->enable);
 }
 
 /**
@@ -97,5 +118,5 @@ static inline uint8_t mavlink_msg_image_trigger_control_get_enable(const mavlink
  */
 static inline void mavlink_msg_image_trigger_control_decode(const mavlink_message_t* msg, mavlink_image_trigger_control_t* image_trigger_control)
 {
-	image_trigger_control->enable = mavlink_msg_image_trigger_control_get_enable(msg);
+	memcpy( image_trigger_control, msg->payload, sizeof(mavlink_image_trigger_control_t));
 }

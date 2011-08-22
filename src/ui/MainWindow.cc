@@ -1,4 +1,24 @@
-/*===================================================================
+/*=====================================================================
+
+QGroundControl Open Source Ground Control Station
+
+(c) 2009 - 2011 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+
+This file is part of the QGROUNDCONTROL project
+
+    QGROUNDCONTROL is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    QGROUNDCONTROL is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with QGROUNDCONTROL. If not, see <http://www.gnu.org/licenses/>.
+
 ======================================================================*/
 
 /**
@@ -15,7 +35,6 @@
 #include <QTimer>
 #include <QHostInfo>
 
-#include "MG.h"
 #include "QGC.h"
 #include "MAVLinkSimulationLink.h"
 #include "SerialLink.h"
@@ -135,9 +154,16 @@ MainWindow::MainWindow(QWidget *parent):
     connect(LinkManager::instance(), SIGNAL(newLink(LinkInterface*)), this, SLOT(addLink(LinkInterface*)));
 
     // Connect user interface devices
-    if (!joystick) {
-        joystick = new JoystickInput();
-    }
+    joystickWidget = 0;
+    joystick = new JoystickInput();
+
+    // Load Toolbar
+    toolBar = new QGCToolBar(this);
+    this->addToolBar(toolBar);
+    // Add actions
+    toolBar->addPerspectiveChangeAction(ui.actionOperatorsView);
+    toolBar->addPerspectiveChangeAction(ui.actionEngineersView);
+    toolBar->addPerspectiveChangeAction(ui.actionPilotsView);
 
     // Enable and update view
     presentView();
@@ -244,6 +270,7 @@ void MainWindow::resizeEvent(QResizeEvent * event)
         ui.statusBar->setVisible(false);
     } else {
         ui.statusBar->setVisible(true);
+        ui.statusBar->setSizeGripEnabled(true);
     }
 }
 
@@ -938,18 +965,19 @@ void MainWindow::connectCommonWidgets()
 
 void MainWindow::createCustomWidget()
 {
-    QGCToolWidget* tool = new QGCToolWidget("Unnamed Tool", this);
+    QDockWidget* dock = new QDockWidget("Unnamed Tool", this);
+    QGCToolWidget* tool = new QGCToolWidget("Unnamed Tool", dock);
 
-    if (QGCToolWidget::instances()->size() < 2) {
+    if (QGCToolWidget::instances()->size() < 2)
+    {
         // This is the first widget
         ui.menuTools->addSeparator();
     }
 
-    QDockWidget* dock = new QDockWidget("Unnamed Tool", this);
     connect(tool, SIGNAL(destroyed()), dock, SLOT(deleteLater()));
     dock->setWidget(tool);
 
-    QAction* showAction = new QAction("Show Unnamed Tool", this);
+    QAction* showAction = new QAction(tool->getTitle(), this);
     showAction->setCheckable(true);
     connect(dock, SIGNAL(visibilityChanged(bool)), showAction, SLOT(setChecked(bool)));
     connect(showAction, SIGNAL(triggered(bool)), dock, SLOT(setVisible(bool)));
@@ -957,6 +985,40 @@ void MainWindow::createCustomWidget()
     ui.menuTools->addAction(showAction);
     this->addDockWidget(Qt::BottomDockWidgetArea, dock);
     dock->setVisible(true);
+}
+
+void MainWindow::loadCustomWidget()
+{
+    QString widgetFileExtension(".qgw");
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Specify Widget File Name"), QDesktopServices::storageLocation(QDesktopServices::DesktopLocation), tr("QGroundControl Widget (*%1);;").arg(widgetFileExtension));
+
+    if (fileName.length() > 0)
+    {
+
+        QGCToolWidget* tool = new QGCToolWidget("", this);
+        tool->loadSettings(fileName);
+
+        if (QGCToolWidget::instances()->size() < 2)
+        {
+            // This is the first widget
+            ui.menuTools->addSeparator();
+        }
+
+        // Add widget to UI
+        QDockWidget* dock = new QDockWidget(tool->getTitle(), this);
+        connect(tool, SIGNAL(destroyed()), dock, SLOT(deleteLater()));
+        dock->setWidget(tool);
+        tool->setParent(dock);
+
+        QAction* showAction = new QAction(tool->getTitle(), this);
+        showAction->setCheckable(true);
+        connect(dock, SIGNAL(visibilityChanged(bool)), showAction, SLOT(setChecked(bool)));
+        connect(showAction, SIGNAL(triggered(bool)), dock, SLOT(setVisible(bool)));
+        tool->setMainMenuAction(showAction);
+        ui.menuTools->addAction(showAction);
+        this->addDockWidget(Qt::BottomDockWidgetArea, dock);
+        dock->setVisible(true);
+    }
 }
 
 void MainWindow::connectPxWidgets()
@@ -1333,6 +1395,7 @@ void MainWindow::connectCommonActions()
 
     // Custom widget actions
     connect(ui.actionNewCustomWidget, SIGNAL(triggered()), this, SLOT(createCustomWidget()));
+    connect(ui.actionLoadCustomWidgetFile, SIGNAL(triggered()), this, SLOT(loadCustomWidget()));
 
     // Audio output
     ui.actionMuteAudioOutput->setChecked(GAudioOutput::instance()->isMuted());
@@ -1573,7 +1636,7 @@ void MainWindow::UASCreated(UASInterface* uas)
         }
 
         switch (uas->getAutopilotType()) {
-        case (MAV_AUTOPILOT_SLUGS): {
+        case (MAV_CLASS_SLUGS): {
             // Build Slugs Widgets
             buildSlugsWidgets();
 
@@ -1611,9 +1674,9 @@ void MainWindow::UASCreated(UASInterface* uas)
         }
         break;
         default:
-        case (MAV_AUTOPILOT_GENERIC):
-        case (MAV_AUTOPILOT_ARDUPILOTMEGA):
-        case (MAV_AUTOPILOT_PIXHAWK): {
+        case (MAV_CLASS_GENERIC):
+        case (MAV_CLASS_ARDUPILOTMEGA):
+        case (MAV_CLASS_PIXHAWK): {
             // Build Pixhawk Widgets
             buildPxWidgets();
 
@@ -1946,3 +2009,7 @@ void MainWindow::loadDataView(QString fileName)
 }
 
 
+QList<QAction*> MainWindow::listLinkMenuActions(void)
+{
+	return ui.menuNetwork->actions();
+}
