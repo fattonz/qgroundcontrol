@@ -60,18 +60,6 @@ QGCVideoMainWindow::QGCVideoMainWindow(QWidget *parent) :
 
     // Open port
     link.connect();
-
-    // Show flow // FIXME
-    int xCount = 16;
-    int yCount = 5;
-
-    unsigned char flowX[xCount][yCount];
-    unsigned char flowY[xCount][yCount];
-
-    flowX[3][3] = 10;
-    flowY[3][3] = 5;
-
-    ui->video4Widget->copyFlow((const unsigned char*)flowX, (const unsigned char*)flowY, xCount, yCount);
 }
 
 QGCVideoMainWindow::~QGCVideoMainWindow()
@@ -110,6 +98,17 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
 
     unsigned char i0 = data[0];
     unsigned char id = data[1];
+
+    ui->video4Widget->enableFlow(true);
+
+    int xCount = 36;
+    int yCount = 23;
+    int flowdatacounterx = 0;
+    int flowdatacounterx2 = 0;
+    int flowdatacountery2 = 0;
+
+    char flowX[yCount*xCount];
+    char flowY[yCount*xCount];
 
     index.append(QString().sprintf("%02x", i0));
     imageid.append(QString().sprintf("%02x", id));
@@ -237,6 +236,46 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
                 imageRecBuffer2[i+45120/4*7] = data[i*4+5];
                 imageRecBuffer3[i+45120/4*7] = data[i*4+6];
                 imageRecBuffer4[i+45120/4*7] = data[i*4+7];
+                if (i>0) //25. lines
+                {
+                    if(flowdatacounterx<828)
+                    {
+                        if(-((data[i*4+7]&0xF0)-128)>-90&&-((data[i*4+7]&0xF0)-128)<90)
+                        {
+                            flowX[flowdatacounterx] = -((data[i*4+7]&0xF0)-128);//|((data[i*4+7]&0x0F)-8);
+                        }
+                        else
+                        {
+                            flowX[flowdatacounterx] = 0;
+                        }
+                        flowdatacounterx = flowdatacounterx+1;
+                    }
+                }
+                if (i>9023) //25. lines
+                {
+                    if(flowdatacounterx2<xCount)
+                    {
+                        if(-((data[i*4+6]&0xF0)-128)>-90&&-((data[i*4+6]&0xF0)-128)<90)
+                        {
+                            flowY[flowdatacountery2*xCount+flowdatacounterx2] = -((data[i*4+6]&0xF0)-128);//|((data[i*4+6]&0x0F)-8);
+                        }
+                        else
+                        {
+                            flowY[flowdatacountery2*xCount+flowdatacounterx2] = 0;
+                        }
+                        flowdatacountery2 = flowdatacountery2+1;
+                        if(flowdatacountery2>yCount-4)
+                        {
+                            flowY[(flowdatacountery2+0)*xCount+flowdatacounterx2] = 1;
+                            flowY[(flowdatacountery2+1)*xCount+flowdatacounterx2] = 1;
+                            flowY[(flowdatacountery2+2)*xCount+flowdatacounterx2] = 1;
+                            flowdatacountery2 = 0;
+                            flowdatacounterx2 = flowdatacounterx2+1;
+
+                        }
+                    }
+                }
+
             }
             if(id != last_id)
             {
@@ -246,7 +285,6 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
             break;
         }
     }
-
     last_id = id;
 
 
@@ -322,22 +360,14 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
         ui->video1Widget->copyImage(image1);
         ui->video2Widget->copyImage(image2);
         ui->video3Widget->copyImage(image3);
-        ui->video4Widget->copyImage(image4);
+        //ui->video4Widget->copyImage(image4);
+        ui->video4Widget->copyFlow((const char*)flowX, (const char*)flowY, xCount, yCount);
         part = 0;
         imageRecBuffer1.clear();
         imageRecBuffer2.clear();
         imageRecBuffer3.clear();
         imageRecBuffer4.clear();
 
-        ui->video4Widget->enableFlow(true);
-
-        int xCount = 16;
-        int yCount = 5;
-
-        unsigned char flowX[xCount][yCount];
-        unsigned char flowY[xCount][yCount];
-
-        ui->video4Widget->copyFlow((const unsigned char*)flowX, (const unsigned char*)flowY, xCount, yCount);
     }
 
 

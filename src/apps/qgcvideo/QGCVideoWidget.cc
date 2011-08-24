@@ -442,7 +442,7 @@ void QGCVideoWidget::paintEvent(QPaintEvent *event)
     Q_UNUSED(event);
 }
 
-void QGCVideoWidget::copyFlow(const unsigned char* flowX, const unsigned char* flowY, int width, int height)
+void QGCVideoWidget::copyFlow(const char* flowX, const char* flowY, int width, int height)
 {
     flowWidth = width;
     flowHeight = height;
@@ -450,8 +450,8 @@ void QGCVideoWidget::copyFlow(const unsigned char* flowX, const unsigned char* f
     delete flowFieldX;
     delete flowFieldY;
 
-    flowFieldX = (unsigned char**) malloc(width*height);
-    flowFieldY = (unsigned char**) malloc(width*height);
+    flowFieldX = (char*) malloc(width*height);
+    flowFieldY = (char*) malloc(width*height);
 
     memcpy(flowFieldX, flowX, width*height);
     memcpy(flowFieldY, flowY, width*height);
@@ -461,15 +461,26 @@ void QGCVideoWidget::paintFlowField(QPainter* painter)
 {
     if (width() > 0 && height() > 0)
     {
-        unsigned int sX = (flowWidth+1)/width();
-        unsigned int sY = (flowHeight+1)/height();
-        for (unsigned int i = 0; i < flowWidth; ++i)
+        int sX = width()/(flowWidth+1);
+        int sY = height()/(flowHeight+1);
+        for (unsigned int i = 0; i < flowHeight; ++i)
         {
-            for (unsigned int j = 0; j < flowHeight; ++j)
+            for (unsigned int j = 0; j < flowWidth; ++j)
             {
                 // Paint vector
-                qDebug() << "X" << i << flowFieldX[i][j] << "Y" << j << flowFieldY[i][j];
-                //painter->drawLine(QPointF(sX*i, sY*j), QPointF(sX*i+(flowFieldX[i][j]), sY*j+(flowFieldY[i][j])));
+                //qDebug() << "X" << i << flowFieldX[j*flowWidth+i] << "Y" << j << flowFieldY[j*flowWidth+i];
+//                if(flowFieldY[j*flowWidth+i]<0)
+//                {
+//                    painter->setPen(Qt::red);
+//                }
+//                else
+//                {
+//                     painter->setPen(Qt::blue);
+//                }
+                painter->setPen(Qt::red);
+                painter->drawLine(QPointF(sX+sX*j, sY+sY*i), QPointF(sX+sX*j+((flowFieldX[i*flowWidth+j])/128.0f*sX), sY+sY*i+((flowFieldY[i*flowWidth+j])/128.0f*sY)));
+                painter->setPen(Qt::gray);
+                painter->drawEllipse(QPointF(sX+sX*j, sY+sY*i), 2, 2);
             }
         }
     }

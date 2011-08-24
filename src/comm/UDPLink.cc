@@ -343,7 +343,7 @@ void UDPLink::setName(QString name)
 
 qint64 UDPLink::getNominalDataRate()
 {
-    return 54000000; // 54 Mbit
+    return 1000000000; //1000 Mbit//54000000; // 54 Mbit
 }
 
 qint64 UDPLink::getTotalUpstream()
