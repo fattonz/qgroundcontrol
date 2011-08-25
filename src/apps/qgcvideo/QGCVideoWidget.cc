@@ -442,10 +442,13 @@ void QGCVideoWidget::paintEvent(QPaintEvent *event)
     Q_UNUSED(event);
 }
 
-void QGCVideoWidget::copyFlow(const char* flowX, const char* flowY, int width, int height)
+void QGCVideoWidget::copyFlow(const char* flowX, const char* flowY, char Xavg, char Yavg, int width, int height)
 {
     flowWidth = width;
     flowHeight = height;
+
+    flowXavg = Xavg;
+    flowYavg = Yavg;
 
     delete flowFieldX;
     delete flowFieldY;
@@ -463,6 +466,8 @@ void QGCVideoWidget::paintFlowField(QPainter* painter)
     {
         int sX = width()/(flowWidth+1);
         int sY = height()/(flowHeight+1);
+        painter->setPen(Qt::blue);
+        painter->drawLine(QPointF(width()/2, height()/2), QPointF(width()/2+(flowXavg/128.0f*width()/2),height()/2+(flowYavg/128.0f*height()/2)));
         for (unsigned int i = 0; i < flowHeight; ++i)
         {
             for (unsigned int j = 0; j < flowWidth; ++j)

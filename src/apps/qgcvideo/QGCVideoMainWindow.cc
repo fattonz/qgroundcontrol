@@ -109,6 +109,8 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
 
     char flowX[yCount*xCount];
     char flowY[yCount*xCount];
+    char flowXavg;
+    char flowYavg;
 
     index.append(QString().sprintf("%02x", i0));
     imageid.append(QString().sprintf("%02x", id));
@@ -236,13 +238,13 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
                 imageRecBuffer2[i+45120/4*7] = data[i*4+5];
                 imageRecBuffer3[i+45120/4*7] = data[i*4+6];
                 imageRecBuffer4[i+45120/4*7] = data[i*4+7];
-                if (i>0) //25. lines
+                if (i>6769) //18th lines
                 {
                     if(flowdatacounterx<828)
                     {
-                        if(-((data[i*4+7]&0xF0)-128)>-90&&-((data[i*4+7]&0xF0)-128)<90)
+                        if(-((data[i*4+6]&0xF0)-128)>-80&&-((data[i*4+6]&0xF0)-128)<80)
                         {
-                            flowX[flowdatacounterx] = -((data[i*4+7]&0xF0)-128);//|((data[i*4+7]&0x0F)-8);
+                            flowX[flowdatacounterx] = -(((data[i*4+6]&0xF0)-128)+((data[i*4+6]&0x0F)-8));
                         }
                         else
                         {
@@ -250,14 +252,19 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
                         }
                         flowdatacounterx = flowdatacounterx+1;
                     }
+                    if(flowdatacounterx==828)
+                    {
+                        flowXavg = -(((data[(i+1)*4+6]&0xF0)-128)+((data[(i+1)*4+6]&0x0F)-8));
+                        flowdatacounterx = flowdatacounterx+1;
+                    }
                 }
-                if (i>9023) //25. lines
+                if (i>9025) //25th line
                 {
                     if(flowdatacounterx2<xCount)
                     {
-                        if(-((data[i*4+6]&0xF0)-128)>-90&&-((data[i*4+6]&0xF0)-128)<90)
+                        if(-((data[i*4+6]&0xF0)-128)>-80&&-((data[i*4+6]&0xF0)-128)<80)
                         {
-                            flowY[flowdatacountery2*xCount+flowdatacounterx2] = -((data[i*4+6]&0xF0)-128);//|((data[i*4+6]&0x0F)-8);
+                            flowY[flowdatacountery2*xCount+flowdatacounterx2] = -(((data[i*4+6]&0xF0)-128)+((data[i*4+6]&0x0F)-8));
                         }
                         else
                         {
@@ -274,6 +281,12 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
 
                         }
                     }
+                    if(i==9025+829)
+                    {
+                        flowYavg = -(((data[i*4+6]&0xF0)-128)+((data[i*4+6]&0x0F)-8));
+                        flowdatacounterx2 = flowdatacounterx2+1;
+                    }
+
                 }
 
             }
@@ -361,7 +374,7 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
         ui->video2Widget->copyImage(image2);
         ui->video3Widget->copyImage(image3);
         //ui->video4Widget->copyImage(image4);
-        ui->video4Widget->copyFlow((const char*)flowX, (const char*)flowY, xCount, yCount);
+        ui->video4Widget->copyFlow((const char*)flowX, (const char*)flowY,flowXavg,flowYavg, xCount, yCount);
         part = 0;
         imageRecBuffer1.clear();
         imageRecBuffer2.clear();
