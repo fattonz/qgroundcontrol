@@ -99,7 +99,6 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
     unsigned char i0 = data[0];
     unsigned char id = data[1];
 
-    ui->video4Widget->enableFlow(true);
 
     int xCount = 36;
     int yCount = 23;
@@ -109,8 +108,8 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
 
     char flowX[yCount*xCount];
     char flowY[yCount*xCount];
-    char flowXavg;
-    char flowYavg;
+    char flowXavg = 0;
+    char flowYavg = 0;
 
     index.append(QString().sprintf("%02x", i0));
     imageid.append(QString().sprintf("%02x", id));
@@ -321,6 +320,7 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
         QImage image4;
 
 
+
         if (imageRecBuffer1.isNull())
         {
             qDebug()<< "could not convertToPGM()";
@@ -369,12 +369,24 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
         tmpImage2.clear();
         tmpImage3.clear();
         tmpImage4.clear();
+
+        //save images
+        QString imagename = ".bmp";
+        imagename.prepend(imageid);
+        image1.save(imagename,0,-1);
+
         //ui->video1Widget->copyImage(test);
+        ui->video1Widget->copyFlow((const char*)flowX, (const char*)flowY,flowXavg,flowYavg, xCount, yCount);
+        ui->video2Widget->copyFlow((const char*)flowX, (const char*)flowY,flowXavg,flowYavg, xCount, yCount);
+        ui->video3Widget->copyFlow((const char*)flowX, (const char*)flowY,flowXavg,flowYavg, xCount, yCount);
+        ui->video4Widget->copyFlow((const char*)flowX, (const char*)flowY,flowXavg,flowYavg, xCount, yCount);
         ui->video1Widget->copyImage(image1);
         ui->video2Widget->copyImage(image2);
         ui->video3Widget->copyImage(image3);
-        //ui->video4Widget->copyImage(image4);
-        ui->video4Widget->copyFlow((const char*)flowX, (const char*)flowY,flowXavg,flowYavg, xCount, yCount);
+        ui->video4Widget->copyImage(image4);
+
+        //ui->video4Widget->enableFlow(true);
+
         part = 0;
         imageRecBuffer1.clear();
         imageRecBuffer2.clear();

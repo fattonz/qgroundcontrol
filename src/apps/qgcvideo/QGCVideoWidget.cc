@@ -220,13 +220,13 @@ void QGCVideoWidget::contextMenuEvent (QContextMenuEvent* event)
 {
     QMenu menu(this);
     // Update actions
-    enableHUDAction->setChecked(hudInstrumentsEnabled);
-//    enableVideoAction->setChecked(videoEnabled);
+   // enableHUDAction->setChecked(hudInstrumentsEnabled);
+    enableVideoAction->setChecked(videoEnabled);
 
-    menu.addAction(enableHUDAction);
+   // menu.addAction(enableHUDAction);
     menu.addAction(enableFlowFieldAction);
     //menu.addAction(selectQGCVideoWidgetColorAction);
-//    menu.addAction(enableVideoAction);
+    menu.addAction(enableVideoAction);
 //    menu.addAction(selectOfflineDirectoryAction);
     //menu.addAction(selectVideoChannelAction);
     menu.exec(event->globalPos());
@@ -234,23 +234,23 @@ void QGCVideoWidget::contextMenuEvent (QContextMenuEvent* event)
 
 void QGCVideoWidget::createActions()
 {
-    enableHUDAction = new QAction(tr("Enable HUD"), this);
-    enableHUDAction->setStatusTip(tr("Show the HUD instruments in this window"));
-    enableHUDAction->setCheckable(true);
-    enableHUDAction->setChecked(hudInstrumentsEnabled);
-    connect(enableHUDAction, SIGNAL(triggered(bool)), this, SLOT(enableHUDInstruments(bool)));
+//    enableHUDAction = new QAction(tr("Enable HUD"), this);
+//    enableHUDAction->setStatusTip(tr("Show the HUD instruments in this window"));
+//    enableHUDAction->setCheckable(true);
+//    enableHUDAction->setChecked(hudInstrumentsEnabled);
+//    connect(enableHUDAction, SIGNAL(triggered(bool)), this, SLOT(enableHUDInstruments(bool)));
 
     enableVideoAction = new QAction(tr("Enable Video Live feed"), this);
     enableVideoAction->setStatusTip(tr("Show the video live feed"));
     enableVideoAction->setCheckable(true);
     enableVideoAction->setChecked(videoEnabled);
+    connect(enableVideoAction, SIGNAL(triggered(bool)), this, SLOT(enableVideo(bool)));
 
     enableFlowFieldAction = new QAction(tr("Enable Optical Flow Field"), this);
     enableFlowFieldAction->setCheckable(true);
     enableFlowFieldAction->setChecked(flowEnabled);
     connect(enableFlowFieldAction, SIGNAL(triggered(bool)), this, SLOT(enableFlow(bool)));
 
-//    connect(enableVideoAction, SIGNAL(triggered(bool)), this, SLOT(enableVideo(bool)));
 
     selectOfflineDirectoryAction = new QAction(tr("Select image log"), this);
     selectOfflineDirectoryAction->setStatusTip(tr("Load previously logged images into simulation / replay"));
@@ -483,6 +483,7 @@ void QGCVideoWidget::paintFlowField(QPainter* painter)
 //                     painter->setPen(Qt::blue);
 //                }
                 painter->setPen(Qt::red);
+                //painter->setPen(Qt::PenStyle width(9),;
                 painter->drawLine(QPointF(sX+sX*j, sY+sY*i), QPointF(sX+sX*j+((flowFieldX[i*flowWidth+j])/128.0f*sX), sY+sY*i+((flowFieldY[i*flowWidth+j])/128.0f*sY)));
                 painter->setPen(Qt::gray);
                 painter->drawEllipse(QPointF(sX+sX*j, sY+sY*i), 2, 2);
@@ -574,7 +575,7 @@ void QGCVideoWidget::paintHUD()
             //qDebug() << "DRAWING GL IMAGE";
         } else {
             // Blue / brown background
-            paintCenterBackground(roll, pitch, yawTrans);
+            //paintCenterBackground(roll, pitch, yawTrans);
         }
 
         glMatrixMode(GL_MODELVIEW);
