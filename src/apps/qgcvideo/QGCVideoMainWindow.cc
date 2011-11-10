@@ -1,24 +1,4 @@
 /*=====================================================================
-
- QGroundControl Open Source Ground Control Station
-
- (c) 2009 - 2011 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
-
- This file is part of the QGROUNDCONTROL project
-
- QGROUNDCONTROL is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- QGROUNDCONTROL is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with QGROUNDCONTROL. If not, see <http://www.gnu.org/licenses/>.
-
  ======================================================================*/
 
 /**
@@ -35,17 +15,17 @@
 #include "UDPLink.h"
 #include <QDebug>
 
-  QByteArray imageRecBuffer1 = QByteArray(376*240,255);
-  QByteArray imageRecBuffer2 = QByteArray(376*240,255);
-  QByteArray imageRecBuffer3 = QByteArray(376*240,255);
-  QByteArray imageRecBuffer4 = QByteArray(376*240,255);
-  static int part = 0;
-  unsigned char last_id = 0;
+QByteArray imageRecBuffer1 = QByteArray(376*240,255);
+QByteArray imageRecBuffer2 = QByteArray(376*240,255);
+QByteArray imageRecBuffer3 = QByteArray(376*240,255);
+QByteArray imageRecBuffer4 = QByteArray(376*240,255);
+static int part = 0;
+unsigned char last_id = 0;
 
 QGCVideoMainWindow::QGCVideoMainWindow(QWidget *parent) :
-    QMainWindow(parent),
-    link(QHostAddress::Any, 5555),
-    ui(new Ui::QGCVideoMainWindow)
+        QMainWindow(parent),
+        link(QHostAddress::Any, 5555),
+        ui(new Ui::QGCVideoMainWindow)
 {
     ui->setupUi(this);
 
@@ -105,15 +85,17 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
     int flowdatacounterx = 0;
     int flowdatacounterx2 = 0;
     int flowdatacountery2 = 0;
+    int flowdatacounterd = 0;
 
     char flowX[yCount*xCount];
     char flowY[yCount*xCount];
+    unsigned char depth[yCount*xCount];
     char flowXavg = 0;
     char flowYavg = 0;
 
     index.append(QString().sprintf("%02x", i0));
-    imageid.append(QString().sprintf("%02x", id));
-     qDebug() << "Received" << data.size() << "bytes"<< " part: " <<index<< " imageid: " <<imageid;
+    imageid.append(QString().sprintf("%03d", id));
+    qDebug() << "Received" << data.size() << "bytes"<< " part: " <<index<< " imageid: " <<imageid;
 
     switch (i0)
     {
@@ -237,7 +219,31 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
                 imageRecBuffer2[i+45120/4*7] = data[i*4+5];
                 imageRecBuffer3[i+45120/4*7] = data[i*4+6];
                 imageRecBuffer4[i+45120/4*7] = data[i*4+7];
-                if (i>6769) //18th lines
+            }
+
+
+            //            for (int i=0; i<828; i++){
+            //                flowX[i] = 0;
+            //                flowY[i] = 0;
+            //                depth[i] = 0;
+            //            }
+
+
+            if(id != last_id)
+            {
+                part = 0;
+            }
+            part = part | 128;
+            break;
+        }
+
+
+
+    case 0x0F:
+        {
+            for (int i=0; i<data.size()/4-1; i++)
+            {
+                if (i>2) //0 lines
                 {
                     if(flowdatacounterx<828)
                     {
@@ -251,13 +257,13 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
                         }
                         flowdatacounterx = flowdatacounterx+1;
                     }
-                    if(flowdatacounterx==828)
-                    {
-                        flowXavg = -(((data[(i+1)*4+6]&0xF0)-128)+((data[(i+1)*4+6]&0x0F)-8));
-                        flowdatacounterx = flowdatacounterx+1;
-                    }
+                    //                    if(flowdatacounterx==828)
+                    //                    {
+                    //                        flowXavg = -(((data[(i+1)*4+6]&0xF0)-128)+((data[(i+1)*4+6]&0x0F)-8));
+                    //                        flowdatacounterx = flowdatacounterx+1;
+                    //                    }
                 }
-                if (i>9025) //25th line
+                if (i>1506) //5th line
                 {
                     if(flowdatacounterx2<xCount)
                     {
@@ -272,35 +278,43 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
                         flowdatacountery2 = flowdatacountery2+1;
                         if(flowdatacountery2>yCount-4)
                         {
-                            flowY[(flowdatacountery2+0)*xCount+flowdatacounterx2] = 1;
-                            flowY[(flowdatacountery2+1)*xCount+flowdatacounterx2] = 1;
-                            flowY[(flowdatacountery2+2)*xCount+flowdatacounterx2] = 1;
+                            flowY[(flowdatacountery2+0)*xCount+flowdatacounterx2] = 0;
+                            flowY[(flowdatacountery2+1)*xCount+flowdatacounterx2] = 0;
+                            flowY[(flowdatacountery2+2)*xCount+flowdatacounterx2] = 0;
                             flowdatacountery2 = 0;
                             flowdatacounterx2 = flowdatacounterx2+1;
 
                         }
                     }
-                    if(i==9025+829)
-                    {
-                        flowYavg = -(((data[i*4+6]&0xF0)-128)+((data[i*4+6]&0x0F)-8));
-                        flowdatacounterx2 = flowdatacounterx2+1;
-                    }
+                    //                    if(i==9025+829)
+                    //                    {
+                    //                        flowYavg = -(((data[i*4+6]&0xF0)-128)+((data[i*4+6]&0x0F)-8));
+                    //                        flowdatacounterx2 = flowdatacounterx2+1;
+                    //                    }
 
                 }
-
+                if (i>3010) //9th line
+                {
+                    if(flowdatacounterd<828)
+                    {
+                        depth[flowdatacounterd] = data[i*4+6];
+                    }
+                    flowdatacounterd = flowdatacounterd+1;
+                }
             }
+
             if(id != last_id)
             {
                 part = 0;
             }
-            part = part | 128;
+            part = part | 256;
             break;
         }
     }
     last_id = id;
 
 
-    if(part==255)
+    if(part==511)
     {
 
         QByteArray tmpImage1(header.toStdString().c_str(), header.toStdString().size());
@@ -370,16 +384,22 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
         tmpImage3.clear();
         tmpImage4.clear();
 
+
         //save images
-        QString imagename = ".bmp";
-        imagename.prepend(imageid);
-        image1.save(imagename,0,-1);
+        QString imagename1 = ".bmp";
+        QString imagename2 = ".bmp";
+        imagename1.prepend(imageid);
+        imagename2.prepend(imageid);
+        imagename1.prepend("left");
+        imagename2.prepend("rigth");
+        image1.save(imagename1,0,-1);
+        image2.save(imagename2,0,-1);
 
         //ui->video1Widget->copyImage(test);
-        ui->video1Widget->copyFlow((const char*)flowX, (const char*)flowY,flowXavg,flowYavg, xCount, yCount);
-        ui->video2Widget->copyFlow((const char*)flowX, (const char*)flowY,flowXavg,flowYavg, xCount, yCount);
-        ui->video3Widget->copyFlow((const char*)flowX, (const char*)flowY,flowXavg,flowYavg, xCount, yCount);
-        ui->video4Widget->copyFlow((const char*)flowX, (const char*)flowY,flowXavg,flowYavg, xCount, yCount);
+        ui->video1Widget->copyFlow((const char*)flowX, (const char*)flowY,(const unsigned char*)depth,flowXavg,flowYavg, xCount, yCount);
+        ui->video2Widget->copyFlow((const char*)flowX, (const char*)flowY,(const unsigned char*)depth,flowXavg,flowYavg, xCount, yCount);
+        ui->video3Widget->copyFlow((const char*)flowX, (const char*)flowY,(const unsigned char*)depth,flowXavg,flowYavg, xCount, yCount);
+        ui->video4Widget->copyFlow((const char*)flowX, (const char*)flowY,(const unsigned char*)depth,flowXavg,flowYavg, xCount, yCount);
         ui->video1Widget->copyImage(image1);
         ui->video2Widget->copyImage(image2);
         ui->video3Widget->copyImage(image3);
@@ -399,7 +419,7 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
 
 
 
-   /* for (int j=0; j<data.size(); j++) {
+    /* for (int j=0; j<data.size(); j++) {
         unsigned char v = data[j];
         bytes.append(QString().sprintf("%02x ", v));
         if (data.at(j) > 31 && data.at(j) < 127)
@@ -420,3 +440,4 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
 
 
 }
+

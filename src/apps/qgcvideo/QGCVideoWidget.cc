@@ -137,6 +137,7 @@ QGCVideoWidget::QGCVideoWidget(QWidget* parent)
       imageRequested(false),
       flowFieldX(NULL),
       flowFieldY(NULL),
+      depthField(NULL),
       flowWidth(0),
       flowHeight(0)
 {
@@ -442,7 +443,7 @@ void QGCVideoWidget::paintEvent(QPaintEvent *event)
     Q_UNUSED(event);
 }
 
-void QGCVideoWidget::copyFlow(const char* flowX, const char* flowY, char Xavg, char Yavg, int width, int height)
+void QGCVideoWidget::copyFlow(const char* flowX, const char* flowY,const unsigned char* depth, char Xavg, char Yavg, int width, int height)
 {
     flowWidth = width;
     flowHeight = height;
@@ -452,25 +453,34 @@ void QGCVideoWidget::copyFlow(const char* flowX, const char* flowY, char Xavg, c
 
     delete flowFieldX;
     delete flowFieldY;
+    delete depthField;
 
     flowFieldX = (char*) malloc(width*height);
     flowFieldY = (char*) malloc(width*height);
+    depthField = (unsigned char*) malloc(width*height);
 
     memcpy(flowFieldX, flowX, width*height);
     memcpy(flowFieldY, flowY, width*height);
+    memcpy(depthField, depth, width*height);
 }
 
 void QGCVideoWidget::paintFlowField(QPainter* painter)
 {
+//    for (int i=0; i<flowWidth*flowHeight; i++){
+//        flowFieldX[i] = 0;
+//        flowFieldY[i] = 0;
+//        depthField[i] = 0;
+//    }
     if (width() > 0 && height() > 0)
     {
-        int sX = width()/(flowWidth+1);
-        int sY = height()/(flowHeight+1);
-        painter->setPen(Qt::blue);
+        int sX = (width()-72*width()/376)/(flowWidth+1);
+        int sY = (height()-40*height()/240)/(flowHeight+1);
+       // painter->setPen(Qt::blue);
+        painter->setPen(QPen(Qt::blue, 8));
         painter->drawLine(QPointF(width()/2, height()/2), QPointF(width()/2+(flowXavg/128.0f*width()/2),height()/2+(flowYavg/128.0f*height()/2)));
-        for (unsigned int i = 0; i < flowHeight; ++i)
+        for (unsigned int i = 2; i < flowHeight+2; ++i)
         {
-            for (unsigned int j = 0; j < flowWidth; ++j)
+            for (unsigned int j = 2; j < flowWidth+2; ++j)
             {
                 // Paint vector
                 //qDebug() << "X" << i << flowFieldX[j*flowWidth+i] << "Y" << j << flowFieldY[j*flowWidth+i];
@@ -482,11 +492,14 @@ void QGCVideoWidget::paintFlowField(QPainter* painter)
 //                {
 //                     painter->setPen(Qt::blue);
 //                }
-                painter->setPen(Qt::red);
+                painter->setPen(Qt::green);
                 //painter->setPen(Qt::PenStyle width(9),;
                 painter->drawLine(QPointF(sX+sX*j, sY+sY*i), QPointF(sX+sX*j+((flowFieldX[i*flowWidth+j])/128.0f*sX), sY+sY*i+((flowFieldY[i*flowWidth+j])/128.0f*sY)));
                 painter->setPen(Qt::gray);
-                painter->drawEllipse(QPointF(sX+sX*j, sY+sY*i), 2, 2);
+
+                painter->setPen(QColor(depthField[i*flowWidth+j],0,255-depthField[i*flowWidth+j]));
+
+                painter->drawEllipse(QPointF(sX+sX*j, sY+sY*i), 4, 4);
             }
         }
     }

@@ -34,7 +34,7 @@ public slots:
     void enableVideo(bool enabled) { videoEnabled = enabled; }
     void enableFlow(bool enabled) { flowEnabled = enabled; }
     /** @brief Copy flow */
-    void copyFlow(const char* flowX, const char* flowY,char Xavg, char Yavg,int width, int height);
+    void copyFlow(const char* flowX, const char* flowY,const unsigned char* depth,char Xavg, char Yavg,int width, int height);
 
 
 protected slots:
@@ -171,6 +171,7 @@ protected:
     int flowFieldHeight;
     char* flowFieldX;
     char* flowFieldY;
+    unsigned char* depthField;
     unsigned int flowWidth;
     unsigned int flowHeight;
     char flowXavg;
