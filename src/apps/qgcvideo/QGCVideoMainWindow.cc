@@ -106,7 +106,7 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
                 imageRecBuffer1[i] = data[i*4+4];
                 imageRecBuffer2[i] = data[i*4+5];
                 imageRecBuffer3[i] = data[i*4+6];
-                imageRecBuffer4[i] = data[i*4+7];
+                imageRecBuffer4[i+310] = data[i*4+7];
             }
             if(id != last_id)
             {
@@ -122,7 +122,7 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
                 imageRecBuffer1[i+45120/4] = data[i*4+4];
                 imageRecBuffer2[i+45120/4] = data[i*4+5];
                 imageRecBuffer3[i+45120/4] = data[i*4+6];
-                imageRecBuffer4[i+45120/4] = data[i*4+7];
+                imageRecBuffer4[i+45120/4+310] = data[i*4+7];
             }
             if(id != last_id)
             {
@@ -138,7 +138,7 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
                 imageRecBuffer1[i+45120/4*2] = data[i*4+4];
                 imageRecBuffer2[i+45120/4*2] = data[i*4+5];
                 imageRecBuffer3[i+45120/4*2] = data[i*4+6];
-                imageRecBuffer4[i+45120/4*2] = data[i*4+7];
+                imageRecBuffer4[i+45120/4*2+310] = data[i*4+7];
             }
             if(id != last_id)
             {
@@ -154,7 +154,7 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
                 imageRecBuffer1[i+45120/4*3] = data[i*4+4];
                 imageRecBuffer2[i+45120/4*3] = data[i*4+5];
                 imageRecBuffer3[i+45120/4*3] = data[i*4+6];
-                imageRecBuffer4[i+45120/4*3] = data[i*4+7];
+                imageRecBuffer4[i+45120/4*3+310] = data[i*4+7];
             }
             if(id != last_id)
             {
@@ -170,7 +170,7 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
                 imageRecBuffer1[i+45120/4*4] = data[i*4+4];
                 imageRecBuffer2[i+45120/4*4] = data[i*4+5];
                 imageRecBuffer3[i+45120/4*4] = data[i*4+6];
-                imageRecBuffer4[i+45120/4*4] = data[i*4+7];
+                imageRecBuffer4[i+45120/4*4+310] = data[i*4+7];
             }
             if(id != last_id)
             {
@@ -186,7 +186,7 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
                 imageRecBuffer1[i+45120/4*5] = data[i*4+4];
                 imageRecBuffer2[i+45120/4*5] = data[i*4+5];
                 imageRecBuffer3[i+45120/4*5] = data[i*4+6];
-                imageRecBuffer4[i+45120/4*5] = data[i*4+7];
+                imageRecBuffer4[i+45120/4*5+310] = data[i*4+7];
             }
             if(id != last_id)
             {
@@ -202,7 +202,7 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
                 imageRecBuffer1[i+45120/4*6] = data[i*4+4];
                 imageRecBuffer2[i+45120/4*6] = data[i*4+5];
                 imageRecBuffer3[i+45120/4*6] = data[i*4+6];
-                imageRecBuffer4[i+45120/4*6] = data[i*4+7];
+                imageRecBuffer4[i+45120/4*6+310] = data[i*4+7];
             }
             if(id != last_id)
             {
@@ -218,7 +218,7 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
                 imageRecBuffer1[i+45120/4*7] = data[i*4+4];
                 imageRecBuffer2[i+45120/4*7] = data[i*4+5];
                 imageRecBuffer3[i+45120/4*7] = data[i*4+6];
-                imageRecBuffer4[i+45120/4*7] = data[i*4+7];
+                imageRecBuffer4[i+45120/4*7+310] = data[i*4+7];
             }
 
 
@@ -243,7 +243,7 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
         {
             for (int i=0; i<data.size()/4-1; i++)
             {
-                if (i>2) //0 lines
+                if (i>1) //0 lines
                 {
                     if(flowdatacounterx<828)
                     {
@@ -263,7 +263,7 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
                     //                        flowdatacounterx = flowdatacounterx+1;
                     //                    }
                 }
-                if (i>1506) //5th line
+                if (i>1505) //5th line
                 {
                     if(flowdatacounterx2<xCount)
                     {
@@ -293,7 +293,7 @@ void QGCVideoMainWindow::receiveBytes(LinkInterface* link, QByteArray data)
                     //                    }
 
                 }
-                if (i>3010) //9th line
+                if (i>3008) //9th line
                 {
                     if(flowdatacounterd<828)
                     {
