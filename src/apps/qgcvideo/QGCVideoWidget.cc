@@ -495,14 +495,14 @@ void QGCVideoWidget::paintFlowField(QPainter* painter)
 //                {
 //                     painter->setPen(Qt::blue);
 //                }
-                painter->setPen(Qt::green);
-                //painter->setPen(Qt::PenStyle width(9),;
+                painter->setPen(QPen(Qt::green, 5));
+                //painter->setPen(Qt::PenStyle width(9));
                 painter->drawLine(QPointF(sX+sX*j, sY+sY*i), QPointF(sX+sX*j+((flowFieldX[ir*flowWidth+jr])/128.0f*sX), sY+sY*i+((flowFieldY[ir*flowWidth+jr])/128.0f*sY)));
                 painter->setPen(Qt::gray);
 
-                painter->setPen(QColor(depthField[ir*flowWidth+jr],0,255-depthField[ir*flowWidth+jr]));
+                //painter->setPen(QColor(depthField[ir*flowWidth+jr],0,255-depthField[ir*flowWidth+jr]));
 
-                painter->drawEllipse(QPointF(sX+sX*j, sY+sY*i), 4, 4);
+                painter->drawEllipse(QPointF(sX+sX*j, sY+sY*i), 2, 2);
             }
         }
     }
